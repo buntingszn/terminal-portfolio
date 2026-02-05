@@ -258,7 +258,7 @@ func TestRenderDividerNegativeWidth(t *testing.T) {
 
 func TestWrapTextBreaksAtWordBoundaries(t *testing.T) {
 	text := "the quick brown fox jumps over the lazy dog"
-	lines := wrapText(text, 20)
+	lines := WrapText(text, 20)
 
 	for _, line := range lines {
 		if len([]rune(line)) > 20 {
@@ -274,29 +274,29 @@ func TestWrapTextBreaksAtWordBoundaries(t *testing.T) {
 
 func TestWrapTextPreservesNewlines(t *testing.T) {
 	text := "line one\nline two"
-	lines := wrapText(text, 80)
+	lines := WrapText(text, 80)
 	if len(lines) != 2 {
 		t.Errorf("wrapText should produce 2 lines, got %d: %v", len(lines), lines)
 	}
 }
 
 func TestWrapTextEmptyString(t *testing.T) {
-	lines := wrapText("", 40)
+	lines := WrapText("", 40)
 	if len(lines) != 1 || lines[0] != "" {
-		t.Errorf("wrapText(\"\") should return [\"\"], got %v", lines)
+		t.Errorf("WrapText(\"\") should return [\"\"], got %v", lines)
 	}
 }
 
 func TestWrapTextSingleLongWord(t *testing.T) {
 	word := "supercalifragilisticexpialidocious"
-	lines := wrapText(word, 10)
+	lines := WrapText(word, 10)
 	if len(lines) != 1 || lines[0] != word {
 		t.Errorf("wrapText should keep single long word intact, got %v", lines)
 	}
 }
 
 func TestWrapTextZeroWidth(t *testing.T) {
-	lines := wrapText("hello world", 0)
+	lines := WrapText("hello world", 0)
 	if len(lines) != 1 {
 		t.Errorf("wrapText with width=0 should return original text as single element, got %v", lines)
 	}
@@ -341,6 +341,51 @@ func TestPadRightWithAnsi(t *testing.T) {
 	visualWidth := lipgloss.Width(result)
 	if visualWidth != 10 {
 		t.Errorf("padRight with ANSI: visual width = %d, want 10", visualWidth)
+	}
+}
+
+// ---------------------------------------------------------------------------
+// PadRight (exported)
+// ---------------------------------------------------------------------------
+
+func TestPadRightExported(t *testing.T) {
+	result := PadRight("hi", 10)
+	if lipgloss.Width(result) != 10 {
+		t.Errorf("PadRight(\"hi\", 10) visual width = %d, want 10", lipgloss.Width(result))
+	}
+}
+
+func TestPadRightExportedWithAnsi(t *testing.T) {
+	style := lipgloss.NewStyle().Foreground(lipgloss.Color("#ff0000"))
+	styled := style.Render("hi")
+	result := PadRight(styled, 10)
+	if lipgloss.Width(result) != 10 {
+		t.Errorf("PadRight with ANSI: visual width = %d, want 10", lipgloss.Width(result))
+	}
+}
+
+// ---------------------------------------------------------------------------
+// PadLinesToWidth
+// ---------------------------------------------------------------------------
+
+func TestPadLinesToWidth(t *testing.T) {
+	input := "short\nlonger line"
+	result := PadLinesToWidth(input, 15)
+	lines := strings.Split(result, "\n")
+	for i, line := range lines {
+		w := lipgloss.Width(line)
+		if w != 15 {
+			t.Errorf("line %d width = %d, want 15", i, w)
+		}
+	}
+}
+
+func TestPadLinesToWidthPreservesLong(t *testing.T) {
+	input := "this is a very long line that exceeds target"
+	result := PadLinesToWidth(input, 10)
+	// Should not truncate, just return as-is.
+	if result != input {
+		t.Errorf("PadLinesToWidth should not truncate, got %q", result)
 	}
 }
 

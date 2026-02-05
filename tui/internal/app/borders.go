@@ -90,7 +90,7 @@ func RenderCard(theme Theme, title, content string, width int) string {
 	bottomBorder := borderStyle.Render(borderBottomLeft + strings.Repeat(borderHorizontal, bottomLineWidth) + borderBottomRight)
 
 	// Wrap and render content lines.
-	lines := wrapText(content, innerWidth)
+	lines := WrapText(content, innerWidth)
 	styledBorderV := borderStyle.Render(borderVertical)
 
 	var body strings.Builder
@@ -112,10 +112,10 @@ func RenderDivider(theme Theme, width int) string {
 	return borderStyle.Render(strings.Repeat(borderHorizontal, width))
 }
 
-// wrapText wraps text to fit within the given width, breaking at word
+// WrapText wraps text to fit within the given width, breaking at word
 // boundaries. Lines containing a single word longer than width are kept
 // intact (not split mid-word).
-func wrapText(text string, width int) []string {
+func WrapText(text string, width int) []string {
 	if width <= 0 {
 		return []string{text}
 	}
@@ -173,4 +173,20 @@ func padRight(s string, width int) string {
 		return s
 	}
 	return s + strings.Repeat(" ", width-sLen)
+}
+
+// PadRight pads a string with trailing spaces to reach the desired visual width.
+// Uses lipgloss.Width for ANSI-aware measurement.
+func PadRight(s string, width int) string {
+	return padRight(s, width)
+}
+
+// PadLinesToWidth pads every line in content to targetWidth visual columns,
+// ensuring consistent horizontal centering when the viewport centers per-line.
+func PadLinesToWidth(content string, targetWidth int) string {
+	lines := strings.Split(content, "\n")
+	for i, line := range lines {
+		lines[i] = padRight(line, targetWidth)
+	}
+	return strings.Join(lines, "\n")
 }
