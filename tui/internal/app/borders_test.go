@@ -390,6 +390,43 @@ func TestPadLinesToWidthPreservesLong(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
+// TruncateWithEllipsis
+// ---------------------------------------------------------------------------
+
+func TestTruncateWithEllipsis_NoTruncation(t *testing.T) {
+	result := TruncateWithEllipsis("short", 20)
+	if result != "short" {
+		t.Errorf("expected no truncation, got %q", result)
+	}
+}
+
+func TestTruncateWithEllipsis_Truncates(t *testing.T) {
+	result := TruncateWithEllipsis("https://example.com/very/long/path", 20)
+	w := lipgloss.Width(result)
+	if w > 20 {
+		t.Errorf("truncated width = %d, want <= 20", w)
+	}
+	if !strings.HasSuffix(result, "...") {
+		t.Errorf("expected ellipsis suffix, got %q", result)
+	}
+}
+
+func TestTruncateWithEllipsis_VerySmallWidth(t *testing.T) {
+	result := TruncateWithEllipsis("hello world", 3)
+	// maxWidth <= 3 returns as-is
+	if result != "hello world" {
+		t.Errorf("expected no truncation at width 3, got %q", result)
+	}
+}
+
+func TestTruncateWithEllipsis_ExactFit(t *testing.T) {
+	result := TruncateWithEllipsis("hello", 5)
+	if result != "hello" {
+		t.Errorf("expected exact fit, got %q", result)
+	}
+}
+
+// ---------------------------------------------------------------------------
 // Exported constants
 // ---------------------------------------------------------------------------
 

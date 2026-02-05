@@ -181,6 +181,23 @@ func PadRight(s string, width int) string {
 	return padRight(s, width)
 }
 
+// TruncateWithEllipsis truncates a string to fit within maxWidth visual columns,
+// appending an ellipsis ("...") if truncation is needed. Uses lipgloss.Width for
+// ANSI-aware measurement.
+func TruncateWithEllipsis(s string, maxWidth int) string {
+	if maxWidth <= 3 || lipgloss.Width(s) <= maxWidth {
+		return s
+	}
+	runes := []rune(s)
+	for i := len(runes) - 1; i >= 0; i-- {
+		candidate := string(runes[:i]) + "..."
+		if lipgloss.Width(candidate) <= maxWidth {
+			return candidate
+		}
+	}
+	return "..."
+}
+
 // PadLinesToWidth pads every line in content to targetWidth visual columns,
 // ensuring consistent horizontal centering when the viewport centers per-line.
 func PadLinesToWidth(content string, targetWidth int) string {
