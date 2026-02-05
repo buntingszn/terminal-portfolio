@@ -161,21 +161,27 @@ func (p PaletteModel) View() string {
 		return ""
 	}
 
-	borderStyle := lipgloss.NewStyle().Foreground(p.theme.Colors.Border)
 	fgStyle := lipgloss.NewStyle().Foreground(p.theme.Colors.Fg)
 	accentStyle := lipgloss.NewStyle().Foreground(p.theme.Colors.Accent)
-	mutedStyle := lipgloss.NewStyle().Foreground(p.theme.Colors.Muted)
 
 	prompt := accentStyle.Render(":") + fgStyle.Render(p.input) + accentStyle.Render("█")
 
 	width := p.width
-	if width < 20 {
-		width = 20
+	if width < 1 {
+		width = 1
 	}
 
+	// For very narrow terminals, render a simple single-line palette without box border.
+	if width < 20 {
+		return prompt
+	}
+
+	borderStyle := lipgloss.NewStyle().Foreground(p.theme.Colors.Border)
+	mutedStyle := lipgloss.NewStyle().Foreground(p.theme.Colors.Muted)
+
 	innerWidth := width - 4
-	if innerWidth < 10 {
-		innerWidth = 10
+	if innerWidth < 1 {
+		innerWidth = 1
 	}
 
 	// Top border.
@@ -185,14 +191,27 @@ func (p PaletteModel) View() string {
 	}
 	top := borderStyle.Render(borderTopLeft + strings.Repeat(borderHorizontal, topFill) + borderTopRight)
 
-	// Prompt line.
-	promptPad := innerWidth - len(":"+p.input+"█") + 1
+	// Prompt line. Use lipgloss.Width for correct rune-aware measurement.
+	promptVisualWidth := lipgloss.Width(":" + p.input + "█")
+	promptPad := innerWidth - promptVisualWidth + 1
 	if promptPad < 0 {
 		promptPad = 0
 	}
 	middle := borderStyle.Render(borderVertical) + " " + prompt +
 		strings.Repeat(" ", promptPad) +
 		borderStyle.Render(borderVertical)
+
+	// Bottom border.
+	bottomFill := innerWidth + 2
+	if bottomFill < 0 {
+		bottomFill = 0
+	}
+	bottom := borderStyle.Render(borderBottomLeft + strings.Repeat(borderHorizontal, bottomFill) + borderBottomRight)
+
+	// For narrow terminals (< 40), skip the hint line to save space.
+	if width < 40 {
+		return top + "\n" + middle + "\n" + bottom
+	}
 
 	// Error or hints line.
 	var infoLine string
@@ -208,13 +227,6 @@ func (p PaletteModel) View() string {
 	info := borderStyle.Render(borderVertical) + " " + infoLine +
 		strings.Repeat(" ", infoPad) +
 		borderStyle.Render(borderVertical)
-
-	// Bottom border.
-	bottomFill := innerWidth + 2
-	if bottomFill < 0 {
-		bottomFill = 0
-	}
-	bottom := borderStyle.Render(borderBottomLeft + strings.Repeat(borderHorizontal, bottomFill) + borderBottomRight)
 
 	return top + "\n" + middle + "\n" + info + "\n" + bottom
 }

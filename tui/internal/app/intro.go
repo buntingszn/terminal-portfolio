@@ -11,6 +11,13 @@ import (
 // introTickInterval is the delay between each boot message appearing.
 const introTickInterval = 150 * time.Millisecond
 
+// introFinalDelay is the longer delay before the final boot message appears.
+const introFinalDelay = 300 * time.Millisecond
+
+// introPauseDuration is the pause after all messages are revealed before
+// transitioning out of the intro.
+const introPauseDuration = 500 * time.Millisecond
+
 // bootMessageType identifies the color category for a boot message.
 type bootMessageType string
 
@@ -48,6 +55,9 @@ var bootMessages = []bootMessage{
 // introTickMsg advances the boot sequence by one message.
 type introTickMsg struct{}
 
+// introPauseMsg signals that the post-reveal pause has elapsed.
+type introPauseMsg struct{}
+
 // IntroDoneMsg signals that the boot sequence has completed.
 type IntroDoneMsg struct{}
 
@@ -56,7 +66,11 @@ type IntroModel struct {
 	messages []bootMessage
 	revealed int // number of messages currently visible
 	done     bool
+	paused   bool // true after all messages revealed, waiting before IntroDoneMsg
+	cursor   Cursor
 	theme    Theme
+	width    int
+	height   int
 }
 
 // NewIntroModel creates an IntroModel ready to animate the boot sequence.
@@ -64,6 +78,7 @@ func NewIntroModel(theme Theme) IntroModel {
 	return IntroModel{
 		messages: bootMessages,
 		theme:    theme,
+		cursor:   NewCursor("intro-cursor", theme),
 	}
 }
 
@@ -82,21 +97,47 @@ func (m IntroModel) Update(msg tea.Msg) (IntroModel, tea.Cmd) {
 
 	switch msg.(type) {
 	case tea.KeyMsg:
-		// Any key skips the intro.
+		// Any key skips the intro (works during both reveal and pause phases).
 		m.revealed = len(m.messages)
 		m.done = true
+		m.paused = false
 		return m, func() tea.Msg { return IntroDoneMsg{} }
 
 	case introTickMsg:
 		m.revealed++
 		if m.revealed >= len(m.messages) {
+			// All messages revealed: enter the pause phase with a blinking cursor.
 			m.revealed = len(m.messages)
-			m.done = true
-			return m, func() tea.Msg { return IntroDoneMsg{} }
+			m.paused = true
+			return m, tea.Batch(
+				tea.Tick(introPauseDuration, func(_ time.Time) tea.Msg {
+					return introPauseMsg{}
+				}),
+				m.cursor.Tick(),
+			)
 		}
-		return m, tea.Tick(introTickInterval, func(_ time.Time) tea.Msg {
+		// Use a longer delay before revealing the final message.
+		delay := introTickInterval
+		if m.revealed == len(m.messages)-1 {
+			delay = introFinalDelay
+		}
+		return m, tea.Tick(delay, func(_ time.Time) tea.Msg {
 			return introTickMsg{}
 		})
+
+	case introPauseMsg:
+		// Pause elapsed: complete the intro.
+		m.done = true
+		m.paused = false
+		return m, func() tea.Msg { return IntroDoneMsg{} }
+
+	case cursorBlinkMsg:
+		// Delegate cursor blink messages during the pause phase.
+		if m.paused {
+			var cmd tea.Cmd
+			m.cursor, cmd = m.cursor.Update(msg)
+			return m, cmd
+		}
 	}
 
 	return m, nil
@@ -108,24 +149,62 @@ func (m IntroModel) View() string {
 		return ""
 	}
 
+	endIdx := m.revealed
+	if endIdx > len(m.messages) {
+		endIdx = len(m.messages)
+	}
+
+	// Determine visible window: show only the most recent N messages
+	// when terminal height is limited.
+	startIdx := 0
+	maxVisible := m.height
+	if maxVisible <= 0 {
+		maxVisible = endIdx // no limit if height unknown
+	}
+	if endIdx-startIdx > maxVisible {
+		startIdx = endIdx - maxVisible
+	}
+
 	var b strings.Builder
-	for i := range m.revealed {
-		if i >= len(m.messages) {
-			break
-		}
+	for i := startIdx; i < endIdx; i++ {
 		msg := m.messages[i]
-		styled := m.styleMessage(msg)
+		text := truncateBootMsg(msg.Text, m.width)
+		truncated := bootMessage{Text: text, Type: msg.Type}
+		styled := m.styleMessage(truncated)
 		b.WriteString(styled)
-		if i < m.revealed-1 {
+		// Append blinking cursor after the final message during the pause.
+		if m.paused && i == endIdx-1 {
+			b.WriteString(m.cursor.View())
+		}
+		if i < endIdx-1 {
 			b.WriteByte('\n')
 		}
 	}
 	return b.String()
 }
 
+// SetSize updates the intro model's known terminal dimensions.
+func (m *IntroModel) SetSize(width, height int) {
+	m.width = width
+	m.height = height
+}
+
 // SetTheme updates the intro model's theme.
 func (m *IntroModel) SetTheme(theme Theme) {
 	m.theme = theme
+	m.cursor.SetTheme(theme)
+}
+
+// truncateBootMsg truncates text to fit within maxWidth, adding an ellipsis
+// when truncation occurs.
+func truncateBootMsg(text string, maxWidth int) string {
+	if maxWidth <= 0 || len(text) <= maxWidth {
+		return text
+	}
+	if maxWidth <= 3 {
+		return text[:maxWidth]
+	}
+	return text[:maxWidth-3] + "..."
 }
 
 // styleMessage returns the styled text for a single boot message.

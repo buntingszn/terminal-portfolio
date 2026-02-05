@@ -2,7 +2,6 @@ package app
 
 import (
 	"strings"
-	"unicode/utf8"
 
 	"github.com/charmbracelet/lipgloss"
 )
@@ -50,9 +49,30 @@ func RenderCard(theme Theme, title, content string, width int) string {
 	// Inner width is total width minus two border columns and two padding spaces.
 	innerWidth := width - 4
 
+	// Truncate title if it would overflow the top border line.
+	// Top border layout: "┌─ " (3) + title + " " (1) + "─" (min 1) + "┐" (1) = 6 overhead.
+	maxTitleLen := width - 6
+	if maxTitleLen < 0 {
+		maxTitleLen = 0
+	}
+	displayTitle := title
+	titleRunes := []rune(title)
+	titleLen := len(titleRunes)
+	if titleLen > maxTitleLen {
+		if maxTitleLen > 3 {
+			displayTitle = string(titleRunes[:maxTitleLen-3]) + "..."
+			titleLen = maxTitleLen
+		} else if maxTitleLen > 0 {
+			displayTitle = string([]rune("...")[:maxTitleLen])
+			titleLen = maxTitleLen
+		} else {
+			displayTitle = ""
+			titleLen = 0
+		}
+	}
+
 	// Build top border: ┌─ Title ───...───┐
-	styledTitle := accentStyle.Render(title)
-	titleLen := utf8.RuneCountInString(title)
+	styledTitle := accentStyle.Render(displayTitle)
 	// "┌─ " = 3 chars, then title, then " ─...─┐"
 	topLineRemain := width - 3 - titleLen - 1 - 1 // 3 for "┌─ ", 1 for " ", 1 for "┐"
 	if topLineRemain < 1 {
@@ -116,7 +136,7 @@ func wrapText(text string, width int) []string {
 		lineLen := 0
 
 		for _, word := range words {
-			wordLen := utf8.RuneCountInString(word)
+			wordLen := lipgloss.Width(word)
 
 			if lineLen == 0 {
 				line.WriteString(word)
@@ -144,9 +164,11 @@ func wrapText(text string, width int) []string {
 	return result
 }
 
-// padRight pads a string with spaces on the right to reach the desired width.
+// padRight pads a string with spaces on the right to reach the desired visual
+// width. Uses lipgloss.Width for correct measurement of strings containing
+// ANSI escape codes or wide Unicode characters.
 func padRight(s string, width int) string {
-	sLen := utf8.RuneCountInString(s)
+	sLen := lipgloss.Width(s)
 	if sLen >= width {
 		return s
 	}

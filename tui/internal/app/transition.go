@@ -4,15 +4,20 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 const (
 	// transitionID identifies transition animation ticks.
 	transitionID = "section-transition"
 
-	// transitionDuration is the total duration for a section transition.
-	// Kept under 200ms for snappy feel.
-	transitionSteps = 10 // ~160ms at 16ms/frame
+	// baseTransitionSteps is the step count for adjacent section transitions.
+	// Each step takes ~16ms (one animation frame), so 6 steps ≈ 96ms.
+	baseTransitionSteps = 6
+
+	// extraStepsPerDistance adds steps for each additional section distance,
+	// making distant transitions slightly longer than adjacent ones.
+	extraStepsPerDistance = 2
 )
 
 // TransitionDirection indicates the visual direction of the transition.
@@ -40,18 +45,24 @@ type TransitionManager struct {
 
 // NewTransitionManager creates a TransitionManager with default settings.
 func NewTransitionManager() TransitionManager {
-	return TransitionManager{
-		steps: transitionSteps,
-	}
+	return TransitionManager{}
 }
 
 // Start begins a transition from one section to another.
+// The step count varies by section distance: adjacent sections use fewer
+// steps (~96ms) while distant sections use more (~160ms).
 // Returns a tea.Cmd to start the animation tick loop.
 func (t *TransitionManager) Start(from, to Section) tea.Cmd {
 	t.active = true
 	t.from = from
 	t.to = to
 	t.step = 0
+
+	distance := int(to) - int(from)
+	if distance < 0 {
+		distance = -distance
+	}
+	t.steps = baseTransitionSteps + (distance-1)*extraStepsPerDistance
 
 	if to > from {
 		t.direction = TransitionRight
@@ -139,39 +150,32 @@ func (t *TransitionManager) View(fromView, toView string, width int) string {
 	return b.String()
 }
 
-// shiftLine shifts a line by offset characters in the given direction.
+// shiftLine shifts a line by offset visual columns in the given direction.
 // Positive direction shifts right, negative shifts left. Output is
-// clamped to width characters.
+// clamped to width columns. Uses lipgloss for ANSI-safe text manipulation
+// rather than operating on raw runes, which would break escape sequences.
 func shiftLine(line string, offset, direction, width int) string {
 	if offset <= 0 || width <= 0 {
 		return line
 	}
 
-	runes := []rune(line)
-	result := make([]rune, width)
-
-	// Fill with spaces.
-	for i := range result {
-		result[i] = ' '
-	}
+	clamp := lipgloss.NewStyle().Width(width).MaxWidth(width)
 
 	if direction > 0 {
-		// Shift right: content moves right.
-		for i, r := range runes {
-			dest := i + offset
-			if dest >= 0 && dest < width {
-				result[dest] = r
-			}
-		}
-	} else {
-		// Shift left: content moves left.
-		for i, r := range runes {
-			dest := i - offset
-			if dest >= 0 && dest < width {
-				result[dest] = r
-			}
-		}
+		// Shift right: prepend spaces to push content rightward,
+		// then clamp to width (lipgloss handles ANSI truncation).
+		return clamp.Render(strings.Repeat(" ", offset) + line)
 	}
 
-	return string(result)
+	// Shift left: content slides off the left edge.
+	// Truncate from the right to (width - offset) visible columns,
+	// then right-pad with spaces to fill the width. This produces a
+	// smooth shrink-away effect during the ~80 ms half-transition.
+	remaining := width - offset
+	if remaining <= 0 {
+		return strings.Repeat(" ", width)
+	}
+
+	truncated := lipgloss.NewStyle().Width(remaining).MaxWidth(remaining).Render(line)
+	return truncated + strings.Repeat(" ", offset)
 }

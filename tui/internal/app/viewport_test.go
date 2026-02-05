@@ -518,11 +518,243 @@ func TestViewWithArrowsShowsBothInMiddle(t *testing.T) {
 	}
 }
 
+func TestSetContentPreserveScroll_AtTop(t *testing.T) {
+	vp := NewViewport(40, 5)
+	lines := make([]string, 20)
+	for i := range lines {
+		lines[i] = "line"
+	}
+	vp.SetContent(strings.Join(lines, "\n"))
+
+	// Viewport is at top initially.
+	if !vp.AtTop() {
+		t.Fatal("expected viewport at top before SetContentPreserveScroll")
+	}
+
+	// Replace content — should stay at top.
+	newLines := make([]string, 30)
+	for i := range newLines {
+		newLines[i] = "new line"
+	}
+	vp.SetContentPreserveScroll(strings.Join(newLines, "\n"))
+
+	if !vp.AtTop() {
+		t.Errorf("expected viewport at top after SetContentPreserveScroll, yOffset = %d", vp.yOffset)
+	}
+	if vp.yOffset != 0 {
+		t.Errorf("yOffset = %d, want 0", vp.yOffset)
+	}
+}
+
+func TestSetContentPreserveScroll_AtBottom(t *testing.T) {
+	vp := NewViewport(40, 5)
+	lines := make([]string, 20)
+	for i := range lines {
+		lines[i] = "line"
+	}
+	vp.SetContent(strings.Join(lines, "\n"))
+	vp.ScrollToBottom()
+
+	if !vp.AtBottom() {
+		t.Fatal("expected viewport at bottom before SetContentPreserveScroll")
+	}
+
+	// Replace with longer content — should stay at bottom.
+	newLines := make([]string, 40)
+	for i := range newLines {
+		newLines[i] = "new line"
+	}
+	vp.SetContentPreserveScroll(strings.Join(newLines, "\n"))
+
+	if !vp.AtBottom() {
+		t.Errorf("expected viewport at bottom after SetContentPreserveScroll, yOffset = %d, maxOffset = %d",
+			vp.yOffset, vp.maxOffset())
+	}
+}
+
+func TestSetContentPreserveScroll_Proportional(t *testing.T) {
+	vp := NewViewport(40, 10)
+	// 110 lines, maxOffset = 100, so scrolling to 50 gives 50%.
+	lines := make([]string, 110)
+	for i := range lines {
+		lines[i] = "line"
+	}
+	vp.SetContent(strings.Join(lines, "\n"))
+	vp.ScrollDown(50)
+
+	pctBefore := vp.RawScrollPercent()
+	if pctBefore < 0.45 || pctBefore > 0.55 {
+		t.Fatalf("expected ~50%% scroll before, got %f", pctBefore)
+	}
+
+	// Replace with different length content (210 lines, maxOffset = 200).
+	newLines := make([]string, 210)
+	for i := range newLines {
+		newLines[i] = "new line"
+	}
+	vp.SetContentPreserveScroll(strings.Join(newLines, "\n"))
+
+	pctAfter := vp.RawScrollPercent()
+	if pctAfter < 0.40 || pctAfter > 0.60 {
+		t.Errorf("expected roughly 50%% scroll after, got %f (yOffset=%d, maxOffset=%d)",
+			pctAfter, vp.yOffset, vp.maxOffset())
+	}
+}
+
+func TestSetSizePreservesScroll(t *testing.T) {
+	vp := NewViewport(40, 10)
+	lines := make([]string, 30)
+	for i := range lines {
+		lines[i] = "line"
+	}
+	vp.SetContent(strings.Join(lines, "\n"))
+
+	// Scroll down to offset 10 (maxOffset = 20).
+	vp.ScrollDown(10)
+	if vp.yOffset != 10 {
+		t.Fatalf("yOffset = %d, want 10", vp.yOffset)
+	}
+
+	// Shrink the viewport — offset should be clamped but not reset to 0.
+	vp.SetSize(40, 15)
+	// New maxOffset = 30 - 15 = 15, so offset 10 is still valid.
+	if vp.yOffset == 0 {
+		t.Error("SetSize should not reset yOffset to 0")
+	}
+	if vp.yOffset != 10 {
+		t.Errorf("yOffset = %d, want 10 (still valid after resize)", vp.yOffset)
+	}
+
+	// Shrink further so maxOffset < current offset.
+	vp.SetSize(40, 25)
+	// New maxOffset = 30 - 25 = 5, so offset 10 should be clamped to 5.
+	if vp.yOffset > vp.maxOffset() {
+		t.Errorf("yOffset %d exceeds maxOffset %d after aggressive resize", vp.yOffset, vp.maxOffset())
+	}
+	if vp.yOffset != 5 {
+		t.Errorf("yOffset = %d, want 5 (clamped to maxOffset)", vp.yOffset)
+	}
+}
+
 func TestScrollTrackAndThumbConstants(t *testing.T) {
 	if scrollTrackChar != "░" {
 		t.Errorf("scrollTrackChar = %q, want %q", scrollTrackChar, "░")
 	}
 	if scrollThumbChar != "█" {
 		t.Errorf("scrollThumbChar = %q, want %q", scrollThumbChar, "█")
+	}
+}
+
+func TestViewWithScrollbarDownArrowAtTop(t *testing.T) {
+	theme := DarkTheme()
+	vp := NewViewport(40, 5)
+	lines := make([]string, 20)
+	for i := range lines {
+		lines[i] = "content"
+	}
+	vp.SetContent(strings.Join(lines, "\n"))
+
+	// At top: should show ▼ (more below), no ▲ (already at top).
+	result := vp.ViewWithScrollbar(theme)
+	if !strings.Contains(result, scrollDownArrow) {
+		t.Error("ViewWithScrollbar at top should contain down arrow for more content below")
+	}
+	if strings.Contains(result, scrollUpArrow) {
+		t.Error("ViewWithScrollbar at top should not contain up arrow")
+	}
+}
+
+func TestViewWithScrollbarUpArrowAtBottom(t *testing.T) {
+	theme := DarkTheme()
+	vp := NewViewport(40, 5)
+	lines := make([]string, 20)
+	for i := range lines {
+		lines[i] = "content"
+	}
+	vp.SetContent(strings.Join(lines, "\n"))
+	vp.ScrollToBottom()
+
+	// At bottom: should show ▲ (more above), no ▼ (already at bottom).
+	result := vp.ViewWithScrollbar(theme)
+	if !strings.Contains(result, scrollUpArrow) {
+		t.Error("ViewWithScrollbar at bottom should contain up arrow for more content above")
+	}
+	if strings.Contains(result, scrollDownArrow) {
+		t.Error("ViewWithScrollbar at bottom should not contain down arrow")
+	}
+}
+
+func TestViewWithScrollbarBothArrowsInMiddle(t *testing.T) {
+	theme := DarkTheme()
+	vp := NewViewport(40, 10)
+	lines := make([]string, 100)
+	for i := range lines {
+		lines[i] = "content"
+	}
+	vp.SetContent(strings.Join(lines, "\n"))
+	vp.ScrollDown(40) // Middle of content.
+
+	result := vp.ViewWithScrollbar(theme)
+	if !strings.Contains(result, scrollUpArrow) {
+		t.Error("ViewWithScrollbar in middle should contain up arrow")
+	}
+	if !strings.Contains(result, scrollDownArrow) {
+		t.Error("ViewWithScrollbar in middle should contain down arrow")
+	}
+}
+
+func TestViewWithScrollbarNoArrowsWhenContentFits(t *testing.T) {
+	theme := DarkTheme()
+	vp := NewViewport(40, 10)
+	vp.SetContent("short\ncontent")
+
+	result := vp.ViewWithScrollbar(theme)
+	if strings.Contains(result, scrollUpArrow) {
+		t.Error("ViewWithScrollbar should not show up arrow when content fits")
+	}
+	if strings.Contains(result, scrollDownArrow) {
+		t.Error("ViewWithScrollbar should not show down arrow when content fits")
+	}
+}
+
+func TestViewWithScrollbarSmallViewport(t *testing.T) {
+	theme := DarkTheme()
+	// Test with minimum reasonable viewport height (5 lines).
+	vp := NewViewport(40, 5)
+	lines := make([]string, 50)
+	for i := range lines {
+		lines[i] = "content"
+	}
+	vp.SetContent(strings.Join(lines, "\n"))
+	vp.ScrollDown(20)
+
+	result := vp.ViewWithScrollbar(theme)
+	resultLines := strings.Split(result, "\n")
+	if len(resultLines) != 5 {
+		t.Errorf("ViewWithScrollbar at height 5 produced %d lines, want 5", len(resultLines))
+	}
+}
+
+func TestViewWithScrollbarLargeViewport(t *testing.T) {
+	theme := DarkTheme()
+	// Test with large viewport height (60 lines).
+	vp := NewViewport(80, 60)
+	lines := make([]string, 200)
+	for i := range lines {
+		lines[i] = "content line"
+	}
+	vp.SetContent(strings.Join(lines, "\n"))
+	vp.ScrollDown(70)
+
+	result := vp.ViewWithScrollbar(theme)
+	resultLines := strings.Split(result, "\n")
+	if len(resultLines) != 60 {
+		t.Errorf("ViewWithScrollbar at height 60 produced %d lines, want 60", len(resultLines))
+	}
+	if !strings.Contains(result, scrollUpArrow) {
+		t.Error("ViewWithScrollbar large viewport in middle should contain up arrow")
+	}
+	if !strings.Contains(result, scrollDownArrow) {
+		t.Error("ViewWithScrollbar large viewport in middle should contain down arrow")
 	}
 }

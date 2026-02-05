@@ -12,6 +12,8 @@ type Config struct {
 	SSHPort     int
 	DataDir     string
 	MaxSessions int
+	// IdleTimeout controls how long a session can remain idle before being
+	// disconnected. A value of 0 disables idle timeout entirely.
 	IdleTimeout time.Duration
 	Debug       bool
 }

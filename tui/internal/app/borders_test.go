@@ -3,6 +3,8 @@ package app
 import (
 	"strings"
 	"testing"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 func testTheme() Theme {
@@ -104,6 +106,116 @@ func TestRenderCardLightTheme(t *testing.T) {
 	}
 	if !strings.Contains(out, "Content") {
 		t.Error("RenderCard with light theme should contain content")
+	}
+}
+
+func TestRenderCardLongTitle(t *testing.T) {
+	// Title is 54 chars. With width=20, innerWidth=16.
+	// Title (54) > innerWidth (16), so truncate to 13 chars + "..." = 16.
+	longTitle := "This Is A Very Long Title That Exceeds The Card Width"
+	out := RenderCard(testTheme(), longTitle, "body", 20)
+	plain := stripANSI(out)
+
+	// The full title should NOT appear.
+	if strings.Contains(plain, longTitle) {
+		t.Error("RenderCard should truncate a title longer than inner width")
+	}
+
+	// The truncated title should end with "...".
+	if !strings.Contains(plain, "...") {
+		t.Error("Truncated title should contain ellipsis '...'")
+	}
+
+	// Verify all lines respect the width.
+	for i, line := range strings.Split(out, "\n") {
+		p := stripANSI(line)
+		if p == "" {
+			continue
+		}
+		if len([]rune(p)) > 20 {
+			t.Errorf("line %d exceeds width 20: %d runes: %q", i, len([]rune(p)), p)
+		}
+	}
+}
+
+func TestRenderCardMinimalWidth(t *testing.T) {
+	// Test widths 10 through 15 to verify bordered output without panics.
+	for w := 10; w <= 15; w++ {
+		out := RenderCard(testTheme(), "T", "ok", w)
+		if !strings.Contains(out, "┌") {
+			t.Errorf("width=%d: missing top-left corner", w)
+		}
+		if !strings.Contains(out, "└") {
+			t.Errorf("width=%d: missing bottom-left corner", w)
+		}
+		if !strings.Contains(out, "┐") {
+			t.Errorf("width=%d: missing top-right corner", w)
+		}
+		if !strings.Contains(out, "┘") {
+			t.Errorf("width=%d: missing bottom-right corner", w)
+		}
+
+		// Verify no line exceeds the target width.
+		for i, line := range strings.Split(out, "\n") {
+			p := stripANSI(line)
+			if p == "" {
+				continue
+			}
+			if len([]rune(p)) > w {
+				t.Errorf("width=%d line %d has %d runes (exceeds): %q", w, i, len([]rune(p)), p)
+			}
+		}
+	}
+}
+
+func TestRenderCardEmptyContentRendersBox(t *testing.T) {
+	out := RenderCard(testTheme(), "Header", "", 30)
+
+	// Should produce a bordered box with an empty body line.
+	if !strings.Contains(out, "Header") {
+		t.Error("Card with empty content should still contain the title")
+	}
+
+	// Count body lines (lines between top and bottom border).
+	lines := strings.Split(out, "\n")
+	// Expected: top border, at least one body line, bottom border.
+	if len(lines) < 3 {
+		t.Errorf("Card with empty content should have at least 3 lines (top, body, bottom), got %d", len(lines))
+	}
+
+	// The body line should contain vertical border chars.
+	bodyFound := false
+	for _, line := range lines[1 : len(lines)-1] {
+		plain := stripANSI(line)
+		if strings.Contains(plain, "│") {
+			bodyFound = true
+		}
+	}
+	if !bodyFound {
+		t.Error("Card with empty content should have at least one body line with vertical borders")
+	}
+}
+
+func TestRenderCardWidthBelowMinimum(t *testing.T) {
+	// Width < 10 should return content without borders.
+	for _, w := range []int{0, 1, 5, 9} {
+		content := "raw content"
+		out := RenderCard(testTheme(), "Title", content, w)
+		if out != content {
+			t.Errorf("width=%d: expected raw content %q, got %q", w, content, out)
+		}
+	}
+
+	// Negative width.
+	out := RenderCard(testTheme(), "Title", "text", -1)
+	if out != "text" {
+		t.Errorf("width=-1: expected raw content, got %q", out)
+	}
+
+	// Width 0 with empty content.
+	out = RenderCard(testTheme(), "Title", "", 0)
+	if out != "" {
+		t.Errorf("width=0, empty content: expected empty string, got %q", out)
 	}
 }
 
@@ -215,6 +327,20 @@ func TestPadRightLongString(t *testing.T) {
 	result := padRight("hello world", 5)
 	if result != "hello world" {
 		t.Errorf("padRight should not truncate, got %q", result)
+	}
+}
+
+func TestPadRightWithAnsi(t *testing.T) {
+	// ANSI-styled text has more bytes/runes than visual width.
+	// lipgloss.Width should measure visual width correctly.
+	style := lipgloss.NewStyle().Foreground(lipgloss.Color("#ff0000"))
+	styled := style.Render("hi")
+
+	// Visual width of "hi" is 2; pad to 10.
+	result := padRight(styled, 10)
+	visualWidth := lipgloss.Width(result)
+	if visualWidth != 10 {
+		t.Errorf("padRight with ANSI: visual width = %d, want 10", visualWidth)
 	}
 }
 

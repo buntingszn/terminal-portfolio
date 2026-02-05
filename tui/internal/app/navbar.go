@@ -38,19 +38,73 @@ func (n *NavBar) SetActive(s Section) {
 	n.active = s
 }
 
+// navLabelFormat determines how section labels are rendered based on width.
+type navLabelFormat int
+
+const (
+	navLabelFull    navLabelFormat = iota // "1:home"
+	navLabelShort                         // "1:hm"
+	navLabelNumOnly                       // "1"
+)
+
+// navShortName returns the abbreviated name for a section.
+func navShortName(s Section) string {
+	switch s {
+	case SectionHome:
+		return "hm"
+	case SectionWork:
+		return "wk"
+	case SectionCV:
+		return "cv"
+	case SectionLinks:
+		return "lk"
+	default:
+		return "?"
+	}
+}
+
+// navLabelForWidth returns the label format appropriate for the given width.
+func navLabelForWidth(width int) navLabelFormat {
+	if width >= 40 {
+		return navLabelFull
+	}
+	if width >= 25 {
+		return navLabelShort
+	}
+	return navLabelNumOnly
+}
+
+// navTabLabel returns the tab label string for a section at a given format.
+func navTabLabel(s Section, format navLabelFormat) string {
+	num := int(s) + 1
+	switch format {
+	case navLabelFull:
+		return fmt.Sprintf("%d:%s", num, SectionName(s))
+	case navLabelShort:
+		return fmt.Sprintf("%d:%s", num, navShortName(s))
+	default:
+		return fmt.Sprintf("%d", num)
+	}
+}
+
 // View renders the navigation bar.
-// Layout: ┌[home]─[work]─[cv]─[links]─────────────┐
+// Layout adapts to width:
+//   - >= 40: ┌[1:home]─[2:work]─[3:cv]─[4:links]─────┐
+//   - 25-39: ┌[1:hm]─[2:wk]─[3:cv]─[4:lk]────────────┐
+//   - < 25:  ┌[1]─[2]─[3]─[4]─────────────────────────┐
 func (n NavBar) View() string {
 	accentStyle := lipgloss.NewStyle().Foreground(n.theme.Colors.Accent).Bold(true)
 	mutedStyle := lipgloss.NewStyle().Foreground(n.theme.Colors.Muted)
 	borderStyle := lipgloss.NewStyle().Foreground(n.theme.Colors.Border)
+
+	format := navLabelForWidth(n.width)
 
 	var tabs strings.Builder
 	tabsLen := 0
 
 	for i := range SectionCount {
 		s := Section(i)
-		label := fmt.Sprintf("%d:%s", i+1, SectionName(s))
+		label := navTabLabel(s, format)
 
 		if i > 0 {
 			tabs.WriteString(borderStyle.Render(borderHorizontal))

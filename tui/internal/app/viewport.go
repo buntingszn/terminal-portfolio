@@ -46,6 +46,30 @@ func (v *Viewport) SetContent(content string) {
 	v.yOffset = 0
 }
 
+// SetContentPreserveScroll updates content without resetting the scroll
+// position. If the user was at the bottom, they stay at the bottom. If at the
+// top, they stay at the top. Otherwise the proportional scroll position is
+// restored. This is intended for resize-triggered re-renders where the user's
+// reading position should be preserved.
+func (v *Viewport) SetContentPreserveScroll(content string) {
+	wasAtBottom := v.AtBottom()
+	wasAtTop := v.AtTop()
+	oldPercent := v.RawScrollPercent()
+
+	v.content = content
+	v.lines = strings.Split(content, "\n")
+
+	if wasAtTop {
+		v.yOffset = 0
+	} else if wasAtBottom {
+		v.yOffset = v.maxOffset()
+	} else {
+		// Restore proportional position.
+		v.yOffset = int(oldPercent * float64(v.maxOffset()))
+	}
+	v.clampOffset()
+}
+
 // SetSize updates the viewport dimensions and clamps the scroll offset.
 func (v *Viewport) SetSize(width, height int) {
 	v.width = width
@@ -125,10 +149,11 @@ func (v *Viewport) View() string {
 
 // ViewWithScrollbar renders the viewport content with a vertical scrollbar on
 // the right edge. The scrollbar uses a track character (░) in the theme's
-// muted color and a thumb character (█) in the accent color. The thumb height
+// border color and a thumb character (█) in the muted color. The thumb height
 // is proportional to the visible/total content ratio (minimum 1 character).
-// If all content fits in the viewport, the scrollbar is hidden and plain
-// View() output is returned.
+// When more content exists above or below the visible area, ▲/▼ arrows in the
+// accent color replace the first/last track character. If all content fits in
+// the viewport, the scrollbar is hidden and plain View() output is returned.
 func (v *Viewport) ViewWithScrollbar(theme Theme) string {
 	totalLines := v.TotalLines()
 	visibleHeight := v.height
@@ -139,8 +164,9 @@ func (v *Viewport) ViewWithScrollbar(theme Theme) string {
 
 	thumbHeight, thumbStart := v.scrollbarMetrics()
 
-	trackStyle := lipgloss.NewStyle().Foreground(theme.Colors.Muted)
-	thumbStyle := lipgloss.NewStyle().Foreground(theme.Colors.Accent)
+	trackStyle := lipgloss.NewStyle().Foreground(theme.Colors.Border)
+	thumbStyle := lipgloss.NewStyle().Foreground(theme.Colors.Muted)
+	arrowStyle := lipgloss.NewStyle().Foreground(theme.Colors.Accent)
 
 	indicator := make([]string, visibleHeight)
 	for i := range visibleHeight {
@@ -149,6 +175,16 @@ func (v *Viewport) ViewWithScrollbar(theme Theme) string {
 		} else {
 			indicator[i] = trackStyle.Render(scrollTrackChar)
 		}
+	}
+
+	// Replace first/last track character with directional arrows when there
+	// is more content above or below, respectively. Arrows only replace
+	// track characters, never the thumb.
+	if !v.AtTop() && (0 < thumbStart || 0 >= thumbStart+thumbHeight) {
+		indicator[0] = arrowStyle.Render(scrollUpArrow)
+	}
+	if !v.AtBottom() && (visibleHeight-1 < thumbStart || visibleHeight-1 >= thumbStart+thumbHeight) {
+		indicator[visibleHeight-1] = arrowStyle.Render(scrollDownArrow)
 	}
 
 	visible := v.visibleSlice()
@@ -258,6 +294,20 @@ func (v *Viewport) clampOffset() {
 	}
 	if m := v.maxOffset(); v.yOffset > m {
 		v.yOffset = m
+	}
+}
+
+// GetScrollInfo returns the current scroll state suitable for display in the
+// status bar. If all content fits within the viewport, Fits is true and no
+// scroll indicator is needed.
+func (v *Viewport) GetScrollInfo() ScrollInfo {
+	if v.TotalLines() <= v.height {
+		return ScrollInfo{Fits: true, AtTop: true, AtBottom: true}
+	}
+	return ScrollInfo{
+		AtTop:   v.AtTop(),
+		AtBottom: v.AtBottom(),
+		Percent:  v.ScrollPercent(),
 	}
 }
 
