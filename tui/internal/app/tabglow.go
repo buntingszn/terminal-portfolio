@@ -74,7 +74,7 @@ func (g TabGlow) BrightenedAccent() lipgloss.Color {
 	// Lighten accent by up to 40%.
 	maxBoost := 0.4
 
-	c, err := colorful.Hex(string(g.theme.Colors.Accent))
+	c, err := HexToColorful(g.theme.Colors.Accent)
 	if err != nil {
 		return g.theme.Colors.Accent
 	}

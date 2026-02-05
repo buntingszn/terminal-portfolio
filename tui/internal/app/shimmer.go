@@ -15,6 +15,48 @@ import (
 // shimmerTickInterval is the frame rate for the shimmer animation.
 const shimmerTickInterval = 16 * time.Millisecond // ~60fps
 
+// Shimmer noise layer tuning. Each layer samples fractal Brownian motion
+// noise at different spatial scales to create varied blob shapes. The
+// threshold center/radius control where blobs appear; the weight scales
+// each layer's contribution to the combined brightness.
+const (
+	// Layer 1 (primary): medium-scale blobs.
+	shimmerL1XScale         = 0.14
+	shimmerL1YScale         = 0.22
+	shimmerL1TimeScale      = 0.004
+	shimmerL1ThreshCenter   = 0.52
+	shimmerL1ThreshRadius   = 0.18
+	shimmerL1Weight         = 1.0 // unscaled
+	// Layer 2 (wash): large slow ambient glow.
+	shimmerL2XScale         = 0.07
+	shimmerL2YScale         = 0.1
+	shimmerL2TimeScale      = 0.002
+	shimmerL2TimeOffset     = 80.0
+	shimmerL2ThreshCenter   = 0.5
+	shimmerL2ThreshRadius   = 0.25
+	shimmerL2Weight         = 0.35
+	// Layer 3 (detail): small bright speckles.
+	shimmerL3XScale         = 0.25
+	shimmerL3YScale         = 0.35
+	shimmerL3TimeScale      = 0.006
+	shimmerL3TimeOffset     = 160.0
+	shimmerL3ThreshCenter   = 0.58
+	shimmerL3ThreshRadius   = 0.12
+	shimmerL3Weight         = 0.3
+)
+
+// Global breathing oscillation: overall intensity varies between
+// breathBase and breathBase+breathAmplitude.
+const (
+	shimmerBreathBase      = 0.7
+	shimmerBreathAmplitude = 0.3
+	shimmerBreathFreq      = 0.010
+)
+
+// shimmerMinBrightness is the threshold below which a cell uses the
+// base color directly, avoiding invisible per-char styling overhead.
+const shimmerMinBrightness = 0.005
+
 // shimmerTickMsg advances the shimmer animation by one frame.
 type shimmerTickMsg struct {
 	id string
@@ -43,7 +85,7 @@ func greyFromL(l float64) lipgloss.Color {
 
 // shimmerLightness extracts CIE L* from a theme color.
 func shimmerLightness(c lipgloss.Color) float64 {
-	col, err := colorful.Hex(string(c))
+	col, err := HexToColorful(c)
 	if err != nil {
 		return 0.5
 	}
@@ -123,7 +165,7 @@ func (s Shimmer) Render(text string, textWidth int) string {
 			}
 
 			brightness := s.brightnessAt(li, col, textWidth)
-			if brightness > 0.005 {
+			if brightness > shimmerMinBrightness {
 				l := s.baseL + (s.peakL-s.baseL)*brightness
 				style := lipgloss.NewStyle().Foreground(greyFromL(l))
 				b.WriteString(style.Render(string(r)))
@@ -161,34 +203,34 @@ func (s Shimmer) brightnessAt(row, col, textWidth int) float64 {
 
 	// Noise-sampled coordinates: column shifts with drift for the sweep,
 	// row provides vertical variation, and time evolves the field.
-	nx := (c + drift) * 0.14
-	ny := r * 0.22
-	nz := t * 0.004
+	nx := (c + drift) * shimmerL1XScale
+	ny := r * shimmerL1YScale
+	nz := t * shimmerL1TimeScale
 
 	// Layer 1: primary — medium-scale blobs.
 	n1 := fbmNoise(nx, ny, nz)
-	b1 := smoothThreshold(n1, 0.52, 0.18)
+	b1 := smoothThreshold(n1, shimmerL1ThreshCenter, shimmerL1ThreshRadius)
 
 	// Layer 2: large slow wash — broad ambient glow at a different drift rate.
 	drift2 := 2.0*math.Sin(t*0.004+r*0.3) +
 		1.5*math.Sin(t*0.009+r*0.55)
-	nx2 := (c + drift2) * 0.07
-	ny2 := r * 0.1
-	n2 := fbmNoise(nx2, ny2, t*0.002+80)
-	b2 := smoothThreshold(n2, 0.5, 0.25) * 0.35
+	nx2 := (c + drift2) * shimmerL2XScale
+	ny2 := r * shimmerL2YScale
+	n2 := fbmNoise(nx2, ny2, t*shimmerL2TimeScale+shimmerL2TimeOffset)
+	b2 := smoothThreshold(n2, shimmerL2ThreshCenter, shimmerL2ThreshRadius) * shimmerL2Weight
 
 	// Layer 3: fine detail — small bright speckles drifting independently.
 	drift3 := 2.5*math.Sin(t*0.014+r*0.8) +
 		1.0*math.Sin(t*0.008+r*0.35)
-	nx3 := (c + drift3) * 0.25
-	ny3 := r * 0.35
-	n3 := fbmNoise(nx3, ny3, t*0.006+160)
-	b3 := smoothThreshold(n3, 0.58, 0.12) * 0.3
+	nx3 := (c + drift3) * shimmerL3XScale
+	ny3 := r * shimmerL3YScale
+	n3 := fbmNoise(nx3, ny3, t*shimmerL3TimeScale+shimmerL3TimeOffset)
+	b3 := smoothThreshold(n3, shimmerL3ThreshCenter, shimmerL3ThreshRadius) * shimmerL3Weight
 
 	combined := b1 + b2 + b3
 
 	// Global breathing: slow oscillation of overall intensity.
-	breath := 0.7 + 0.3*math.Sin(t*0.010)
+	breath := shimmerBreathBase + shimmerBreathAmplitude*math.Sin(t*shimmerBreathFreq)
 	combined *= breath
 
 	if combined > 1 {
