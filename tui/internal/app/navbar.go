@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -13,6 +14,7 @@ type NavBar struct {
 	theme  Theme
 	width  int
 	active Section
+	glow   TabGlow
 }
 
 // NewNavBar creates a NavBar with the given theme and terminal width.
@@ -20,12 +22,26 @@ func NewNavBar(theme Theme, width int) NavBar {
 	return NavBar{
 		theme: theme,
 		width: width,
+		glow:  NewTabGlow(theme),
 	}
 }
 
 // SetTheme updates the NavBar's theme.
 func (n *NavBar) SetTheme(theme Theme) {
 	n.theme = theme
+	n.glow.SetTheme(theme)
+}
+
+// StartGlow begins the tab glow pulse and returns the first tick command.
+func (n *NavBar) StartGlow() tea.Cmd {
+	return n.glow.Start()
+}
+
+// Update handles tabGlowTickMsg to advance the glow animation.
+func (n *NavBar) Update(msg tea.Msg) tea.Cmd {
+	var cmd tea.Cmd
+	n.glow, cmd = n.glow.Update(msg)
+	return cmd
 }
 
 // SetWidth updates the NavBar's width.
@@ -112,7 +128,13 @@ func (n NavBar) View() string {
 		}
 
 		if s == n.active {
-			tabs.WriteString(accentStyle.Render("[" + label + "]"))
+			if n.glow.Active() {
+				glowColor := n.glow.BrightenedAccent()
+				glowStyle := lipgloss.NewStyle().Foreground(glowColor).Bold(true)
+				tabs.WriteString(glowStyle.Render("[" + label + "]"))
+			} else {
+				tabs.WriteString(accentStyle.Render("[" + label + "]"))
+			}
 		} else {
 			tabs.WriteString(mutedStyle.Render("[" + label + "]"))
 		}
