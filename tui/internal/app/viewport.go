@@ -16,6 +16,12 @@ const (
 	scrollUpArrow = "▲"
 	// scrollDownArrow indicates more content below.
 	scrollDownArrow = "▼"
+
+	// MaxContentWidth is the maximum width for section content. On wide
+	// terminals the content is capped at this width and centered horizontally.
+	// 88 = comfortable reading width (80 content + card borders), leaving
+	// ~16 cols margin per side on a 120-col terminal.
+	MaxContentWidth = 88
 )
 
 // Viewport is a scrollable content viewer. It slices pre-rendered text into a
@@ -75,6 +81,19 @@ func (v *Viewport) SetSize(width, height int) {
 	v.width = width
 	v.height = height
 	v.clampOffset()
+}
+
+// ContentWidth returns the usable width for section content, accounting for the
+// scrollbar column and capping at MaxContentWidth for readability on wide terminals.
+func (v *Viewport) ContentWidth() int {
+	w := v.width - 1 // scrollbar
+	if w > MaxContentWidth {
+		w = MaxContentWidth
+	}
+	if w < 0 {
+		w = 0
+	}
+	return w
 }
 
 // ScrollUp scrolls up by n lines.
@@ -159,7 +178,7 @@ func (v *Viewport) ViewWithScrollbar(theme Theme) string {
 	visibleHeight := v.height
 
 	if totalLines <= visibleHeight {
-		return v.View()
+		return v.viewCentered()
 	}
 
 	thumbHeight, thumbStart := v.scrollbarMetrics()
@@ -205,7 +224,9 @@ func (v *Viewport) ViewWithScrollbar(theme Theme) string {
 	var b strings.Builder
 	for i := range visibleHeight {
 		line := visible[i]
-		rendered := lipgloss.NewStyle().Width(contentWidth).MaxWidth(contentWidth).Render(line)
+		// Center content horizontally within the available width.
+		centered := lipgloss.PlaceHorizontal(contentWidth, lipgloss.Center, line)
+		rendered := lipgloss.NewStyle().Width(contentWidth).MaxWidth(contentWidth).Render(centered)
 		b.WriteString(rendered)
 		b.WriteString(indicator[i])
 		if i < visibleHeight-1 {
@@ -214,6 +235,38 @@ func (v *Viewport) ViewWithScrollbar(theme Theme) string {
 	}
 
 	return b.String()
+}
+
+// viewCentered renders content centered both vertically and horizontally
+// when all content fits within the viewport (no scrollbar needed).
+func (v *Viewport) viewCentered() string {
+	if v.height <= 0 {
+		return ""
+	}
+
+	visible := v.visibleSlice()
+	totalLines := len(visible)
+	fullWidth := v.width
+
+	// Vertical padding: center content within viewport height.
+	topPad := (v.height - totalLines) / 2
+	if topPad < 0 {
+		topPad = 0
+	}
+
+	output := make([]string, v.height)
+
+	for i := range v.height {
+		contentIdx := i - topPad
+		var line string
+		if contentIdx >= 0 && contentIdx < totalLines {
+			line = visible[contentIdx]
+		}
+		// Center each line horizontally across the full width.
+		output[i] = lipgloss.PlaceHorizontal(fullWidth, lipgloss.Center, line)
+	}
+
+	return strings.Join(output, "\n")
 }
 
 // ViewWithArrows renders the viewport with ▲/▼ arrow indicators in the theme
