@@ -1,0 +1,158 @@
+---
+// Help overlay showing available keyboard shortcuts
+// Toggled via `toggle-help` custom event dispatched by KeyboardNav
+---
+
+<div
+  id="help-overlay"
+  class="help-overlay hidden"
+  role="dialog"
+  aria-label="Keyboard shortcuts"
+  aria-modal="true"
+>
+  <div class="help-backdrop"></div>
+  <div class="help-content">
+    <div class="help-header" aria-hidden="true">
+      <span class="border-char">&#x250C;&#x2500; </span>
+      <span class="title">Keyboard Shortcuts</span>
+      <span class="border-char"> &#x2500;&#x2510;</span>
+    </div>
+    <div class="help-body">
+      <div class="help-row">
+        <span class="key">j / k</span>
+        <span class="desc">Scroll down / up</span>
+      </div>
+      <div class="help-row">
+        <span class="key">1 - 4</span>
+        <span class="desc">Navigate to section</span>
+      </div>
+      <div class="help-row">
+        <span class="key">t</span>
+        <span class="desc">Toggle theme</span>
+      </div>
+      <div class="help-row">
+        <span class="key">:</span>
+        <span class="desc">Open command bar</span>
+      </div>
+      <div class="help-row">
+        <span class="key">?</span>
+        <span class="desc">Toggle this help</span>
+      </div>
+      <div class="help-row">
+        <span class="key">Esc</span>
+        <span class="desc">Close overlay</span>
+      </div>
+    </div>
+    <div class="help-footer" aria-hidden="true">
+      <span class="border-char">&#x2514;&#x2500; </span>
+      <span class="muted">Press ? or Esc to close</span>
+      <span class="border-char"> &#x2500;&#x2518;</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .help-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .help-overlay.hidden {
+    display: none;
+  }
+
+  .help-backdrop {
+    position: absolute;
+    inset: 0;
+    background-color: var(--bg);
+    opacity: 0.85;
+  }
+
+  .help-content {
+    position: relative;
+    z-index: 1;
+    font-family: 'JetBrains Mono', monospace;
+    max-width: 40ch;
+    width: 100%;
+  }
+
+  .help-header,
+  .help-footer {
+    display: flex;
+    align-items: center;
+  }
+
+  .help-header .border-char,
+  .help-footer .border-char {
+    color: var(--border);
+    white-space: pre;
+  }
+
+  .help-header .title {
+    color: var(--accent);
+    font-weight: bold;
+  }
+
+  .help-footer .muted {
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  .help-body {
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+  }
+
+  .help-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+  }
+
+  .key {
+    color: var(--accent);
+    font-weight: bold;
+    min-width: 8ch;
+  }
+
+  .desc {
+    color: var(--fg);
+  }
+</style>
+
+<script>
+  const overlay = document.getElementById('help-overlay')
+  let isOpen = false
+
+  function openHelp() {
+    if (!overlay) return
+    isOpen = true
+    overlay.classList.remove('hidden')
+    overlay.focus()
+  }
+
+  function closeHelp() {
+    if (!overlay) return
+    isOpen = false
+    overlay.classList.add('hidden')
+  }
+
+  document.addEventListener('toggle-help', () => {
+    if (isOpen) closeHelp()
+    else openHelp()
+  })
+
+  overlay?.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Escape' || e.key === '?') {
+      e.preventDefault()
+      closeHelp()
+    }
+  })
+
+  overlay?.setAttribute('tabindex', '-1')
+</script>

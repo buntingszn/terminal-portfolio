@@ -1,0 +1,18 @@
+{
+  "messages": [
+    { "text": "POST: System initialization...", "type": "system" },
+    { "text": "BIOS v1.0.0 — terminal-portfolio", "type": "system" },
+    { "text": "Memory test: 128GB OK", "type": "info" },
+    { "text": "Detecting hardware... AMD Ryzen AI MAX+ 395", "type": "info" },
+    { "text": "GPU: Radeon 8060S (gfx1151) — 124GB VRAM allocated", "type": "info" },
+    { "text": "Loading content modules...", "type": "system" },
+    { "text": "  [OK] about.json", "type": "success" },
+    { "text": "  [OK] work.json", "type": "success" },
+    { "text": "  [OK] cv.json", "type": "success" },
+    { "text": "  [OK] links.json", "type": "success" },
+    { "text": "  [OK] meta.json", "type": "success" },
+    { "text": "Initializing theme engine... warm-minimalist loaded", "type": "info" },
+    { "text": "Starting SSH listener on :2222...", "type": "system" },
+    { "text": "All systems nominal. Welcome.", "type": "accent" }
+  ]
+}

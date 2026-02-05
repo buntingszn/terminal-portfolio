@@ -1,0 +1,55 @@
+---
+interface Props {
+  title?: string
+}
+
+const { title } = Astro.props
+---
+
+<div class="ascii-divider" role="separator">
+  {
+    title ? (
+      <>
+        <span class="line">&#x2500;&#x2500;</span>
+        <span class="title"> {title} </span>
+        <span class="line">&#x2500;&#x2500;</span>
+      </>
+    ) : (
+      <span class="line">&#x2500;</span>
+    )
+  }
+</div>
+
+<style>
+  .ascii-divider {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin: 1.5rem 0;
+    color: var(--border);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1;
+    user-select: none;
+  }
+
+  .ascii-divider .line {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+  }
+
+  .ascii-divider .line::after {
+    content: '────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────';
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  .ascii-divider .title {
+    flex-shrink: 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+</style>

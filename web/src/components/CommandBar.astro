@@ -1,0 +1,150 @@
+---
+// Vim-style command bar (: prefix)
+// Supports: :home, :work, :cv, :links, :theme light/dark, :help
+---
+
+<div
+  id="command-bar"
+  class="command-bar hidden"
+  role="dialog"
+  aria-label="Command bar"
+>
+  <span class="prompt">:</span>
+  <input
+    id="command-input"
+    type="text"
+    autocomplete="off"
+    spellcheck="false"
+    aria-label="Enter command"
+  />
+  <span id="command-error" class="error"></span>
+</div>
+
+<style>
+  .command-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background-color: var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+  }
+
+  .command-bar.hidden {
+    display: none;
+  }
+
+  .prompt {
+    color: var(--accent);
+    margin-right: 0.25rem;
+  }
+
+  input {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--fg);
+    font-family: inherit;
+    font-size: inherit;
+    outline: none;
+  }
+
+  .error {
+    color: var(--accent);
+    font-size: 0.75rem;
+    margin-left: 1rem;
+  }
+</style>
+
+<script>
+  const bar = document.getElementById('command-bar')
+  const input = document.getElementById('command-input') as HTMLInputElement
+  const errorEl = document.getElementById('command-error')
+  let isOpen = false
+
+  function openBar() {
+    if (!bar || !input) return
+    isOpen = true
+    bar.classList.remove('hidden')
+    input.value = ''
+    if (errorEl) errorEl.textContent = ''
+    input.focus()
+  }
+
+  function closeBar() {
+    if (!bar || !input) return
+    isOpen = false
+    bar.classList.add('hidden')
+    input.blur()
+  }
+
+  function executeCommand(cmd: string) {
+    const trimmed = cmd.trim().toLowerCase()
+
+    const routes: Record<string, string> = {
+      home: '/',
+      work: '/work',
+      cv: '/cv',
+      links: '/links',
+    }
+
+    if (routes[trimmed]) {
+      closeBar()
+      window.location.href = routes[trimmed]
+      return
+    }
+
+    if (trimmed.startsWith('theme ')) {
+      const theme = trimmed.split(' ')[1]
+      if (theme === 'light' || theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', theme)
+        localStorage.setItem('theme', theme)
+        const icon = document.querySelector('#theme-toggle .theme-icon')
+        if (icon) icon.textContent = theme === 'dark' ? '[ light ]' : '[ dark ]'
+        closeBar()
+        return
+      }
+    }
+
+    if (trimmed === 'help') {
+      closeBar()
+      document.dispatchEvent(new CustomEvent('toggle-help'))
+      return
+    }
+
+    // Unknown command
+    if (errorEl) {
+      errorEl.textContent = `Unknown: ${trimmed}`
+      setTimeout(() => {
+        if (errorEl) errorEl.textContent = ''
+      }, 2000)
+    }
+  }
+
+  // Listen for toggle-command event from KeyboardNav
+  document.addEventListener('toggle-command', () => {
+    if (isOpen) closeBar()
+    else openBar()
+  })
+
+  // Handle input
+  input?.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      closeBar()
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      const val = input.value.trim()
+      if (!val) {
+        closeBar()
+      } else {
+        executeCommand(val)
+      }
+    }
+  })
+</script>

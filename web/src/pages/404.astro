@@ -1,0 +1,30 @@
+---
+import Base from '@layouts/Base.astro'
+import Nav from '@components/Nav.astro'
+---
+
+<Base title="404 | Not Found">
+  <Nav />
+
+  <section class="not-found">
+    <h1>404</h1>
+    <p class="muted">Page not found. Try one of the navigation links above.</p>
+  </section>
+</Base>
+
+<style>
+  .not-found {
+    text-align: center;
+    padding: 4rem 0;
+  }
+
+  .not-found h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .not-found .muted {
+    color: var(--muted);
+    font-size: 1rem;
+  }
+</style>

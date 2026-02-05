@@ -1,0 +1,40 @@
+/* CRT scanline + vignette effects - purely decorative, CSS-only */
+
+/* Scanline overlay using --border color at very low opacity */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    var(--border) 2px,
+    var(--border) 4px
+  );
+  opacity: 0.06;
+}
+
+/* Vignette effect at screen edges */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 60%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
+}
+
+/* Disable effects for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  body::after,
+  body::before {
+    display: none;
+  }
+}

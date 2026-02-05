@@ -1,0 +1,121 @@
+---
+import bootMessagesData from '@data/assets/boot-messages.json'
+
+const bootMessages = bootMessagesData.messages
+---
+
+<div id="boot-screen" class="boot-screen" aria-hidden="true">
+  <div id="boot-messages" class="boot-messages"></div>
+</div>
+
+<style>
+  .boot-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background-color: var(--bg);
+    display: flex;
+    align-items: flex-start;
+    padding: 2rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    overflow: hidden;
+  }
+
+  .boot-screen.hidden {
+    display: none;
+  }
+
+  .boot-messages {
+    width: 100%;
+    max-width: 80ch;
+  }
+
+  .boot-line {
+    opacity: 0;
+    animation: fadeIn 0.1s ease forwards;
+  }
+
+  .boot-line.system {
+    color: var(--fg);
+  }
+  .boot-line.info {
+    color: var(--muted);
+  }
+  .boot-line.success {
+    color: var(--accent);
+  }
+  .boot-line.accent {
+    color: var(--accent);
+    font-weight: bold;
+  }
+
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .boot-screen {
+      display: none;
+    }
+  }
+</style>
+
+<script is:inline define:vars={{ bootMessages }}>
+  if (sessionStorage.getItem('boot-done')) {
+    document.getElementById('boot-screen')?.classList.add('hidden')
+  } else {
+    const screen = document.getElementById('boot-screen')
+    const container = document.getElementById('boot-messages')
+    let currentIndex = 0
+    let timer = null
+    const delay = 200
+
+    function addMessage() {
+      if (currentIndex >= bootMessages.length) {
+        finish()
+        return
+      }
+
+      const msg = bootMessages[currentIndex]
+      const line = document.createElement('div')
+      line.className = 'boot-line ' + msg.type
+      line.textContent = msg.text
+      container.appendChild(line)
+      currentIndex++
+      timer = setTimeout(addMessage, delay)
+    }
+
+    function finish() {
+      sessionStorage.setItem('boot-done', '1')
+      document.removeEventListener('keydown', skipBoot)
+      document.removeEventListener('click', skipBoot)
+      setTimeout(function () {
+        if (screen) {
+          screen.style.transition = 'opacity 0.3s ease'
+          screen.style.opacity = '0'
+          setTimeout(function () {
+            screen.classList.add('hidden')
+          }, 300)
+        }
+      }, 500)
+    }
+
+    function skipBoot() {
+      if (timer) clearTimeout(timer)
+      sessionStorage.setItem('boot-done', '1')
+      if (screen) {
+        screen.classList.add('hidden')
+      }
+      document.removeEventListener('keydown', skipBoot)
+      document.removeEventListener('click', skipBoot)
+    }
+
+    document.addEventListener('keydown', skipBoot)
+    document.addEventListener('click', skipBoot)
+
+    addMessage()
+  }
+</script>

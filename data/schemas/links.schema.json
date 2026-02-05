@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Links",
+  "description": "External links for social profiles, contact, and other resources.",
+  "type": "object",
+  "required": ["links"],
+  "additionalProperties": false,
+  "properties": {
+    "links": {
+      "type": "array",
+      "description": "List of external links.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "description": "A single external link entry.",
+        "required": ["label", "url", "icon"],
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Display label for the link.",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "description": "Target URL (supports https, mailto, ssh, and other URI schemes).",
+            "format": "uri"
+          },
+          "icon": {
+            "type": "string",
+            "description": "Icon identifier used by both web and TUI renderers (e.g. \"github\", \"mail\", \"terminal\").",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

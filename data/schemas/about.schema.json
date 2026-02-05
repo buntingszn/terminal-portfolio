@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "About",
+  "description": "Biographical information, location, availability status, education, and interests.",
+  "type": "object",
+  "required": ["bio", "location", "status", "education", "interests"],
+  "additionalProperties": false,
+  "properties": {
+    "bio": {
+      "type": "string",
+      "description": "Short biography paragraph.",
+      "minLength": 1
+    },
+    "location": {
+      "type": "string",
+      "description": "Geographic location or region.",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "description": "Current availability or professional status.",
+      "minLength": 1
+    },
+    "education": {
+      "type": "array",
+      "description": "List of educational credentials.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "description": "A single education entry.",
+        "required": ["institution", "degree", "year"],
+        "additionalProperties": false,
+        "properties": {
+          "institution": {
+            "type": "string",
+            "description": "Name of the school or university.",
+            "minLength": 1
+          },
+          "degree": {
+            "type": "string",
+            "description": "Degree or certification earned.",
+            "minLength": 1
+          },
+          "year": {
+            "type": "string",
+            "description": "Graduation year.",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "interests": {
+      "type": "array",
+      "description": "List of professional or personal interests.",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "description": "A single interest.",
+        "minLength": 1
+      }
+    }
+  }
+}

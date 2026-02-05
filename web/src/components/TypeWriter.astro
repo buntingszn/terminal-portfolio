@@ -1,0 +1,81 @@
+---
+interface Props {
+  text: string
+  speed?: number
+  class?: string
+}
+
+const { text, speed = 50, class: className = '' } = Astro.props
+---
+
+<span
+  class:list={['typewriter', className]}
+  data-text={text}
+  data-speed={speed}
+>
+  <span class="typewriter-text" aria-label={text}></span><span
+    class="typewriter-cursor"
+    aria-hidden="true">&#x2588;</span
+  >
+</span>
+
+<style>
+  .typewriter {
+    display: inline;
+  }
+
+  .typewriter-cursor {
+    color: var(--accent);
+    animation: blink 1s step-end infinite;
+  }
+
+  .typewriter-cursor.typing {
+    animation: none;
+    opacity: 1;
+  }
+
+  @keyframes blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .typewriter-cursor {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  document.querySelectorAll('.typewriter').forEach((el) => {
+    const textEl = el.querySelector('.typewriter-text') as HTMLElement
+    const cursorEl = el.querySelector('.typewriter-cursor') as HTMLElement
+    const fullText = el.getAttribute('data-text') || ''
+    const speed = parseInt(el.getAttribute('data-speed') || '50', 10)
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (textEl) textEl.textContent = fullText
+      return
+    }
+
+    if (cursorEl) cursorEl.classList.add('typing')
+    let i = 0
+
+    function type() {
+      if (i < fullText.length) {
+        if (textEl) textEl.textContent = fullText.slice(0, i + 1)
+        i++
+        setTimeout(type, speed)
+      } else {
+        if (cursorEl) cursorEl.classList.remove('typing')
+      }
+    }
+
+    type()
+  })
+</script>

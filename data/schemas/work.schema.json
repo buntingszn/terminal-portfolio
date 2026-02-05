@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Work / Projects",
+  "description": "Portfolio of projects with descriptions, tags, links, and featured status.",
+  "type": "object",
+  "required": ["projects"],
+  "additionalProperties": false,
+  "properties": {
+    "projects": {
+      "type": "array",
+      "description": "List of portfolio projects.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "description": "A single project entry.",
+        "required": ["title", "description", "tags", "url", "repo", "featured"],
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Display name of the project.",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "description": "Short description of the project.",
+            "minLength": 1
+          },
+          "tags": {
+            "type": "array",
+            "description": "Technology tags associated with the project.",
+            "items": {
+              "type": "string",
+              "description": "A technology or topic tag.",
+              "minLength": 1
+            }
+          },
+          "url": {
+            "type": "string",
+            "description": "Live URL of the project. Empty string if not publicly hosted."
+          },
+          "repo": {
+            "type": "string",
+            "description": "Source repository URL. Empty string if not open-source."
+          },
+          "featured": {
+            "type": "boolean",
+            "description": "Whether the project is highlighted on the home screen."
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,138 @@
+---
+import { ClientRouter } from 'astro:transitions'
+import { getMeta } from '../lib/data'
+import KeyboardNav from '../components/KeyboardNav.astro'
+import CommandBar from '../components/CommandBar.astro'
+import HelpOverlay from '../components/HelpOverlay.astro'
+import BootSequence from '../components/BootSequence.astro'
+
+interface Props {
+  title: string
+  description?: string
+}
+
+const meta = getMeta()
+const { title, description = meta.oneLiner } = Astro.props
+const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <!-- Font preloading -->
+    <link
+      rel="preload"
+      href="/fonts/JetBrainsMono-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/JetBrainsMono-Bold.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:site_name" content={meta.name} />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <title>{title}</title>
+    <ClientRouter />
+    <script is:inline>
+      ;(function () {
+        const theme =
+          localStorage.getItem('theme') ||
+          (window.matchMedia('(prefers-color-scheme: light)').matches
+            ? 'light'
+            : 'dark')
+        document.documentElement.setAttribute('data-theme', theme)
+      })()
+    </script>
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link">Skip to content</a>
+    <BootSequence />
+    <main id="main-content">
+      <slot />
+    </main>
+    <CommandBar />
+    <HelpOverlay />
+    <KeyboardNav />
+  </body>
+</html>
+
+<style is:global>
+  /* Import design tokens, fonts, and typography */
+  @import '../styles/fonts.css';
+  @import '../styles/tokens.css';
+  @import '../styles/typography.css';
+  @import '../styles/crt.css';
+
+  /* Skip-to-content link for keyboard users */
+  .skip-link {
+    position: absolute;
+    top: -100%;
+    left: 0;
+    z-index: 1100;
+    padding: 0.5rem 1rem;
+    background: var(--accent);
+    color: var(--bg);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    text-decoration: none;
+  }
+
+  .skip-link:focus {
+    top: 0;
+  }
+
+  /* Minimal reset */
+  *,
+  *::before,
+  *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background-color: var(--bg);
+    color: var(--fg);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 2rem;
+  }
+
+  main {
+    width: 100%;
+    max-width: 80ch;
+    padding: 2rem 1rem;
+    flex: 1;
+  }
+</style>

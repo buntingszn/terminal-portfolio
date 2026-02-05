@@ -1,0 +1,138 @@
+# Terminal Portfolio - Caddy Configuration
+# ============================================================================
+#
+# This Caddyfile provides an OPTIONAL HTTPS reverse proxy configuration.
+#
+# IMPORTANT: The Terminal Portfolio TUI is accessed directly via SSH, NOT HTTP.
+# Users connect with:
+#
+#   ssh -p 2222 your-domain.com
+#
+# This Caddy configuration is useful for two scenarios:
+#
+#   1. Proxying the Astro web frontend (the static portfolio site)
+#   2. Serving a web-based SSH client (e.g., ttyd, webssh, sshwifty)
+#      that connects to the SSH server on the backend
+#
+# You do NOT need Caddy (or any reverse proxy) for direct SSH access.
+#
+# ============================================================================
+# Installation:
+# ============================================================================
+#
+#   1. Install Caddy:
+#      sudo dnf install caddy          # Fedora
+#      sudo apt install caddy           # Debian/Ubuntu
+#
+#   2. Copy this file:
+#      sudo cp Caddyfile /etc/caddy/Caddyfile
+#
+#   3. Edit the domain names below to match your setup.
+#
+#   4. Enable and start Caddy:
+#      sudo systemctl enable --now caddy
+#
+#   5. Caddy automatically provisions TLS certificates via Let's Encrypt.
+#      Make sure ports 80 and 443 are open in the firewall.
+#
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Scenario 1: Astro Web Frontend
+# ----------------------------------------------------------------------------
+# Serve the static Astro site over HTTPS.
+# Replace "portfolio.example.com" with your actual domain.
+#
+# The Astro site is built as static files (npm run build) and can be
+# served directly from disk. No backend process needed.
+#
+# portfolio.example.com {
+#     # Serve the built Astro static site.
+#     # Adjust the path to where your built files are located.
+#     root * /opt/terminal-portfolio/web/dist
+#     file_server
+#
+#     # Enable gzip/zstd compression for faster page loads.
+#     encode zstd gzip
+#
+#     # Security headers.
+#     header {
+#         # Prevent clickjacking.
+#         X-Frame-Options "DENY"
+#         # Prevent MIME type sniffing.
+#         X-Content-Type-Options "nosniff"
+#         # Referrer policy.
+#         Referrer-Policy "strict-origin-when-cross-origin"
+#     }
+#
+#     # Handle SPA-style routing: try the file, then index.html.
+#     try_files {path} {path}/ /index.html
+#
+#     # Log access requests.
+#     log {
+#         output file /var/log/caddy/portfolio-access.log
+#     }
+# }
+
+# ----------------------------------------------------------------------------
+# Scenario 2: Web-Based SSH Client
+# ----------------------------------------------------------------------------
+# If you want browser-based SSH access to the TUI, you can run a web SSH
+# client like ttyd, webssh, or sshwifty and proxy it through Caddy.
+#
+# Example using ttyd (https://github.com/tsl0922/ttyd):
+#
+#   Install ttyd, then run it pointing at your SSH server:
+#     ttyd -p 7681 ssh -p 2222 127.0.0.1
+#
+#   Then uncomment the block below to proxy it with HTTPS:
+#
+# ssh.example.com {
+#     # Reverse proxy to ttyd (web-based terminal).
+#     reverse_proxy 127.0.0.1:7681
+#
+#     # Enable WebSocket support (required by ttyd).
+#     # Caddy handles this automatically for reverse_proxy.
+#
+#     # Security headers.
+#     header {
+#         X-Frame-Options "DENY"
+#         X-Content-Type-Options "nosniff"
+#         Referrer-Policy "strict-origin-when-cross-origin"
+#     }
+#
+#     # Log access requests.
+#     log {
+#         output file /var/log/caddy/ssh-web-access.log
+#     }
+# }
+
+# ----------------------------------------------------------------------------
+# Scenario 3: Both Web + SSH on One Domain
+# ----------------------------------------------------------------------------
+# Serve the static portfolio site on the root path and a web-based SSH
+# client on a subpath like /terminal.
+#
+# portfolio.example.com {
+#     # Static Astro site on the root.
+#     root * /opt/terminal-portfolio/web/dist
+#     file_server
+#
+#     encode zstd gzip
+#
+#     # Web-based SSH client on /terminal path.
+#     # Requires ttyd running on port 7681 with --base-path /terminal
+#     handle_path /terminal/* {
+#         reverse_proxy 127.0.0.1:7681
+#     }
+#
+#     header {
+#         X-Frame-Options "SAMEORIGIN"
+#         X-Content-Type-Options "nosniff"
+#         Referrer-Policy "strict-origin-when-cross-origin"
+#     }
+#
+#     log {
+#         output file /var/log/caddy/portfolio-access.log
+#     }
+# }

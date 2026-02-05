@@ -1,0 +1,29 @@
+---
+// Blinking block cursor - inline component, no JS required
+---
+
+<span class="cursor" aria-hidden="true">&#x2588;</span>
+
+<style>
+  .cursor {
+    color: var(--accent);
+    animation: blink 1s step-end infinite;
+    display: inline;
+  }
+
+  @keyframes blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cursor {
+      animation: none;
+    }
+  }
+</style>

@@ -1,0 +1,54 @@
+/* Design tokens - 5-color warm-minimalist palette */
+
+/* Dark theme (default) */
+:root {
+  --bg: #0d0d0d;
+  --fg: #c8c0b8;
+  --accent: #e05a33;
+  --muted: #555250;
+  --border: #2a2826;
+}
+
+/* Light theme via data attribute */
+[data-theme='light'] {
+  --bg: #f5f2ed;
+  --fg: #1a1a1a;
+  --accent: #c44b2b;
+  --muted: #888580;
+  --border: #d4d0cb;
+}
+
+/* Explicit dark theme via data attribute */
+[data-theme='dark'] {
+  --bg: #0d0d0d;
+  --fg: #c8c0b8;
+  --accent: #e05a33;
+  --muted: #555250;
+  --border: #2a2826;
+}
+
+/* System preference fallback (when no data-theme set) */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --bg: #f5f2ed;
+    --fg: #1a1a1a;
+    --accent: #c44b2b;
+    --muted: #888580;
+    --border: #d4d0cb;
+  }
+}
+
+/* Smooth theme transitions */
+* {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+/* Disable transitions for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

@@ -1,0 +1,227 @@
+---
+import Base from '@layouts/Base.astro'
+import Nav from '@components/Nav.astro'
+import StatusBar from '@components/StatusBar.astro'
+import AsciiDivider from '@components/AsciiDivider.astro'
+import { getMeta, getCv } from '../lib/data'
+import portrait from '@data/assets/portrait.ascii.txt?raw'
+
+const meta = getMeta()
+const cv = getCv()
+---
+
+<Base title={`cv | ${meta.name}`} description={cv.summary}>
+  <Nav current="cv" />
+
+  <section class="neofetch" aria-label="Profile overview">
+    <div class="portrait" aria-hidden="true">
+      <pre><code>{portrait}</code></pre>
+    </div>
+    <div class="info">
+      <p class="header">
+        {meta.name.toLowerCase().replace(/\s/g, '')}@portfolio
+      </p>
+      <p class="separator" aria-hidden="true">──────────────────</p>
+      <p><span class="key">Email</span>: {cv.contact.email}</p>
+      <p><span class="key">Location</span>: {cv.contact.location}</p>
+      <p>
+        <span class="key">Website</span>: <a href={cv.contact.website}
+          >{cv.contact.website}</a
+        >
+      </p>
+      <p class="separator" aria-hidden="true">──────────────────</p>
+      <p><span class="key">Summary</span>: {cv.summary}</p>
+    </div>
+  </section>
+
+  <AsciiDivider title="experience" />
+
+  <section class="experience" aria-label="Work experience">
+    {
+      cv.experience.map((job) => (
+        <div class="experience-entry">
+          <div class="experience-header">
+            <h3>
+              {job.role} <span class="muted">@ {job.company}</span>
+            </h3>
+            <span class="dates">
+              {job.start} &ndash; {job.end}
+            </span>
+          </div>
+          <ul>
+            {job.bullets.map((bullet) => (
+              <li>{bullet}</li>
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+  </section>
+
+  <AsciiDivider title="skills" />
+
+  <section class="skills" aria-label="Skills">
+    {
+      cv.skills.map((group) => (
+        <div class="skills-group">
+          <span class="key">{group.category}</span>: {group.items.join(', ')}
+        </div>
+      ))
+    }
+  </section>
+
+  <AsciiDivider title="education" />
+
+  <section class="education" aria-label="Education">
+    {
+      cv.education.map((edu) => (
+        <div class="education-entry">
+          <p>
+            <span class="key">{edu.degree}</span>
+            <span class="muted"> @ {edu.institution}</span>
+          </p>
+          <p class="muted">{edu.year}</p>
+        </div>
+      ))
+    }
+  </section>
+
+  <StatusBar left="[cv]" center={meta.name} right={meta.version} />
+</Base>
+
+<style>
+  /* Neofetch layout */
+  .neofetch {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+  }
+
+  .portrait {
+    flex-shrink: 0;
+    color: var(--muted);
+    line-height: 1.2;
+  }
+
+  .portrait pre {
+    background: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .portrait code {
+    background: none;
+    padding: 0;
+    font-size: 0.7rem;
+    white-space: pre;
+    color: var(--muted);
+  }
+
+  .info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .info p {
+    margin-bottom: 0.25rem;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  .header {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .separator {
+    color: var(--border);
+    user-select: none;
+  }
+
+  /* Key-value styling */
+  .key {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* Experience section */
+  .experience-entry {
+    margin-bottom: 1.5rem;
+  }
+
+  .experience-entry:last-child {
+    margin-bottom: 0;
+  }
+
+  .experience-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .experience-header h3 {
+    margin-bottom: 0;
+    font-size: 1rem;
+  }
+
+  .dates {
+    color: var(--muted);
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  .experience-entry ul {
+    padding-left: 1.5rem;
+    margin-bottom: 0;
+  }
+
+  .experience-entry li {
+    color: var(--fg);
+    margin-bottom: 0.2rem;
+  }
+
+  /* Skills section */
+  .skills-group {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+  }
+
+  .skills-group:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Education section */
+  .education-entry {
+    margin-bottom: 0.75rem;
+  }
+
+  .education-entry:last-child {
+    margin-bottom: 0;
+  }
+
+  .education-entry p {
+    margin-bottom: 0.1rem;
+  }
+
+  /* Responsive: stack on mobile */
+  @media (max-width: 640px) {
+    .neofetch {
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .portrait {
+      display: none;
+    }
+
+    .experience-header {
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+  }
+</style>

@@ -1,0 +1,118 @@
+---
+interface Props {
+  title?: string
+}
+
+const { title } = Astro.props
+---
+
+<div class="ascii-box">
+  <div class="ascii-box-top" aria-hidden="true">
+    {
+      title ? (
+        <>
+          <span class="corner">&#x250C;&#x2500; </span>
+          <span class="title">{title}</span>
+          <span class="line"> &#x2500;</span>
+          <span class="corner">&#x2510;</span>
+        </>
+      ) : (
+        <>
+          <span class="corner">&#x250C;</span>
+          <span class="line">&#x2500;</span>
+          <span class="corner">&#x2510;</span>
+        </>
+      )
+    }
+  </div>
+  <div class="ascii-box-content">
+    <span class="border-char" aria-hidden="true">&#x2502;</span>
+    <div class="inner">
+      <slot />
+    </div>
+    <span class="border-char" aria-hidden="true">&#x2502;</span>
+  </div>
+  <div class="ascii-box-bottom" aria-hidden="true">
+    <span class="corner">&#x2514;</span>
+    <span class="line">&#x2500;</span>
+    <span class="corner">&#x2518;</span>
+  </div>
+</div>
+
+<style>
+  .ascii-box {
+    width: 100%;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .ascii-box-top,
+  .ascii-box-bottom {
+    display: flex;
+    align-items: center;
+    color: var(--border);
+    line-height: 1;
+    user-select: none;
+  }
+
+  .ascii-box-top .corner,
+  .ascii-box-bottom .corner {
+    flex-shrink: 0;
+    white-space: pre;
+  }
+
+  .ascii-box-top .line,
+  .ascii-box-bottom .line {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+  }
+
+  /*
+   * Use repeating background text trick:
+   * The span contains a single dash character but we extend it
+   * visually with an ::after pseudo-element that overflows.
+   * Simpler approach: just repeat the character many times and clip.
+   */
+  .ascii-box-top .line::after,
+  .ascii-box-bottom .line::after {
+    content: '────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────';
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  .ascii-box-top .title {
+    flex-shrink: 0;
+    color: var(--accent);
+    font-size: 0.9rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .ascii-box-content {
+    display: flex;
+    align-items: stretch;
+  }
+
+  .ascii-box-content .border-char {
+    color: var(--border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: stretch;
+    user-select: none;
+    line-height: 1;
+    padding-top: 0.25rem;
+  }
+
+  .ascii-box-content .inner {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    min-width: 0;
+  }
+
+  /* Reset bottom margin on last child inside box */
+  .ascii-box-content .inner :global(> *:last-child) {
+    margin-bottom: 0;
+  }
+</style>

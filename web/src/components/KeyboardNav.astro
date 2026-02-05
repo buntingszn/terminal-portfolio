@@ -1,0 +1,58 @@
+---
+// Global keyboard navigation handler
+// j/k: scroll, 1-4: page nav, t: theme toggle, ?: help, :: command bar
+---
+
+<script>
+  function handleKeyboard(e: KeyboardEvent) {
+    const target = e.target as HTMLElement
+    if (
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.isContentEditable
+    ) {
+      return
+    }
+
+    switch (e.key) {
+      case 'j':
+        window.scrollBy({ top: 100, behavior: 'smooth' })
+        break
+      case 'k':
+        window.scrollBy({ top: -100, behavior: 'smooth' })
+        break
+      case '1':
+        window.location.href = '/'
+        break
+      case '2':
+        window.location.href = '/work'
+        break
+      case '3':
+        window.location.href = '/cv'
+        break
+      case '4':
+        window.location.href = '/links'
+        break
+      case 't': {
+        const current = document.documentElement.getAttribute('data-theme')
+        const next = current === 'dark' ? 'light' : 'dark'
+        document.documentElement.setAttribute('data-theme', next)
+        localStorage.setItem('theme', next)
+        const icon = document.querySelector('#theme-toggle .theme-icon')
+        if (icon) {
+          icon.textContent = next === 'dark' ? '[ light ]' : '[ dark ]'
+        }
+        break
+      }
+      case '?':
+        document.dispatchEvent(new CustomEvent('toggle-help'))
+        break
+      case ':':
+        e.preventDefault()
+        document.dispatchEvent(new CustomEvent('toggle-command'))
+        break
+    }
+  }
+
+  document.addEventListener('keydown', handleKeyboard)
+</script>

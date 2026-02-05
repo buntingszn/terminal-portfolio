@@ -1,0 +1,137 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CV / Resume",
+  "description": "Structured resume data including contact info, experience, skills, and education.",
+  "type": "object",
+  "required": ["contact", "summary", "experience", "skills", "education"],
+  "additionalProperties": false,
+  "properties": {
+    "contact": {
+      "type": "object",
+      "description": "Primary contact information.",
+      "required": ["email", "location", "website"],
+      "additionalProperties": false,
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Contact email address.",
+          "format": "email"
+        },
+        "location": {
+          "type": "string",
+          "description": "Geographic location or region.",
+          "minLength": 1
+        },
+        "website": {
+          "type": "string",
+          "description": "Personal website URL.",
+          "format": "uri"
+        }
+      }
+    },
+    "summary": {
+      "type": "string",
+      "description": "Professional summary paragraph for the CV header.",
+      "minLength": 1
+    },
+    "experience": {
+      "type": "array",
+      "description": "Work experience entries in reverse chronological order.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "description": "A single work experience entry.",
+        "required": ["company", "role", "start", "end", "bullets"],
+        "additionalProperties": false,
+        "properties": {
+          "company": {
+            "type": "string",
+            "description": "Employer or organization name.",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "description": "Job title or role.",
+            "minLength": 1
+          },
+          "start": {
+            "type": "string",
+            "description": "Start date (year or year-month).",
+            "minLength": 1
+          },
+          "end": {
+            "type": "string",
+            "description": "End date (year, year-month, or \"Present\").",
+            "minLength": 1
+          },
+          "bullets": {
+            "type": "array",
+            "description": "Accomplishment bullet points.",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "description": "A single accomplishment or responsibility.",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "skills": {
+      "type": "array",
+      "description": "Skill categories with lists of individual skills.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "description": "A skill category grouping related skills.",
+        "required": ["category", "items"],
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "type": "string",
+            "description": "Name of the skill category (e.g. \"Languages\", \"Backend\").",
+            "minLength": 1
+          },
+          "items": {
+            "type": "array",
+            "description": "Individual skills within this category.",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "description": "A single skill or technology.",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "education": {
+      "type": "array",
+      "description": "Educational credentials.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "description": "A single education entry.",
+        "required": ["institution", "degree", "year"],
+        "additionalProperties": false,
+        "properties": {
+          "institution": {
+            "type": "string",
+            "description": "Name of the school or university.",
+            "minLength": 1
+          },
+          "degree": {
+            "type": "string",
+            "description": "Degree or certification earned.",
+            "minLength": 1
+          },
+          "year": {
+            "type": "string",
+            "description": "Graduation year.",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

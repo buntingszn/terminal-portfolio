@@ -1,0 +1,168 @@
+---
+import Base from '@layouts/Base.astro'
+import Nav from '@components/Nav.astro'
+import StatusBar from '@components/StatusBar.astro'
+import TypeWriter from '@components/TypeWriter.astro'
+import AsciiDivider from '@components/AsciiDivider.astro'
+import { getMeta, getAbout } from '../lib/data'
+
+const meta = getMeta()
+const about = getAbout()
+
+// Load ASCII portrait as raw text
+import portraitRaw from '@data/assets/portrait.ascii.txt?raw'
+---
+
+<Base title={meta.name} description={meta.oneLiner}>
+  <Nav current="home" />
+
+  <section class="hero" aria-label="Introduction">
+    <h1><TypeWriter text={meta.name} speed={40} /></h1>
+    <p class="title">{meta.title}</p>
+    <p class="muted">{meta.oneLiner}</p>
+  </section>
+
+  <AsciiDivider />
+
+  <section class="about" aria-label="About">
+    <div class="about-content">
+      <div class="about-text">
+        <h2>About</h2>
+        <p>{about.bio}</p>
+
+        <div class="details">
+          <p><span class="label">Location:</span> {about.location}</p>
+          <p><span class="label">Status:</span> {about.status}</p>
+        </div>
+
+        <div class="interests">
+          <span class="label">Interests:</span>
+          <ul>
+            {about.interests.map((interest: string) => <li>{interest}</li>)}
+          </ul>
+        </div>
+
+        <div class="education">
+          <span class="label">Education:</span>
+          {
+            about.education.map(
+              (edu: { degree: string; institution: string; year: string }) => (
+                <p class="muted">
+                  {edu.degree}, {edu.institution} ({edu.year})
+                </p>
+              ),
+            )
+          }
+        </div>
+      </div>
+
+      <pre class="portrait" aria-hidden="true">{portraitRaw}</pre>
+    </div>
+  </section>
+
+  <StatusBar
+    left="~/home"
+    center="j/k scroll · 1-4 nav · ? help"
+    right="HOME"
+  />
+</Base>
+
+<style>
+  .hero {
+    text-align: center;
+    padding: 2rem 0 1rem;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .hero .title {
+    color: var(--fg);
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .hero .muted {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .about {
+    padding: 0.5rem 0 2rem;
+  }
+
+  .about h2 {
+    margin-bottom: 1rem;
+  }
+
+  .about-content {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+
+  .about-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .details {
+    margin-bottom: 1rem;
+  }
+
+  .details p {
+    margin-bottom: 0.25rem;
+  }
+
+  .label {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .interests {
+    margin-bottom: 1rem;
+  }
+
+  .interests ul {
+    margin-top: 0.25rem;
+    padding-left: 1.5rem;
+  }
+
+  .interests li {
+    color: var(--fg);
+  }
+
+  .education {
+    margin-bottom: 1rem;
+  }
+
+  .education p {
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .portrait {
+    flex-shrink: 0;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    background: none;
+    padding: 0;
+    margin: 0;
+    white-space: pre;
+    user-select: none;
+  }
+
+  @media (max-width: 640px) {
+    .about-content {
+      flex-direction: column;
+    }
+
+    .portrait {
+      display: none;
+    }
+  }
+</style>
