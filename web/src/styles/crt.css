@@ -17,24 +17,9 @@ body::after {
   opacity: 0.06;
 }
 
-/* Vignette effect at screen edges */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse at center,
-    transparent 60%,
-    rgba(0, 0, 0, 0.15) 100%
-  );
-}
-
 /* Disable effects for users who prefer reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  body::after,
-  body::before {
+  body::after {
     display: none;
   }
 }

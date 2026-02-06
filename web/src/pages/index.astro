@@ -4,6 +4,7 @@ import Nav from '@components/Nav.astro'
 import StatusBar from '@components/StatusBar.astro'
 import GradientHeading from '@components/GradientHeading.astro'
 import AsciiDivider from '@components/AsciiDivider.astro'
+import PortraitShimmer from '@components/PortraitShimmer.astro'
 import { getMeta, getAbout } from '../lib/data'
 
 const meta = getMeta()
@@ -26,6 +27,8 @@ import portraitRaw from '@data/assets/portrait.ascii.txt?raw'
 
   <section class="about" aria-label="About">
     <div class="about-content">
+      <PortraitShimmer portrait={portraitRaw} class="home-portrait" />
+
       <div class="about-text">
         <h2>About</h2>
         <p>{about.bio}</p>
@@ -42,23 +45,6 @@ import portraitRaw from '@data/assets/portrait.ascii.txt?raw'
           </ul>
         </div>
 
-        <div class="education">
-          <span class="label">Education:</span>
-          {
-            about.education.map(
-              (edu: { degree: string; institution: string; year: string }) => (
-                <p class="muted">
-                  {edu.degree}, {edu.institution} ({edu.year})
-                </p>
-              ),
-            )
-          }
-        </div>
-      </div>
-
-      <div class="portrait-container" aria-hidden="true">
-        <pre class="portrait">{portraitRaw}</pre>
-        <div class="portrait-shimmer"></div>
       </div>
     </div>
   </section>
@@ -137,105 +123,9 @@ import portraitRaw from '@data/assets/portrait.ascii.txt?raw'
     color: var(--fg);
   }
 
-  .education {
-    margin-bottom: 1rem;
-  }
-
-  .education p {
-    margin-top: 0.25rem;
-    margin-bottom: 0.25rem;
-  }
-
-  /* Portrait with shimmer */
-  .portrait-container {
-    flex-shrink: 0;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .portrait {
-    color: var(--muted);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
-    line-height: 1.2;
-    background: none;
-    padding: 0;
-    margin: 0;
-    white-space: pre;
-    user-select: none;
-  }
-
-  .portrait-shimmer {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    mix-blend-mode: screen;
-    animation: shimmer-breathe 10s ease-in-out infinite;
-    background:
-      radial-gradient(
-          ellipse 60% 40% at 30% 40%,
-          color-mix(in srgb, var(--fg) 12%, transparent) 0%,
-          transparent 70%
-        )
-        no-repeat,
-      radial-gradient(
-          ellipse 50% 50% at 70% 60%,
-          color-mix(in srgb, var(--fg) 8%, transparent) 0%,
-          transparent 70%
-        )
-        no-repeat,
-      radial-gradient(
-          ellipse 40% 60% at 50% 30%,
-          color-mix(in srgb, var(--fg) 10%, transparent) 0%,
-          transparent 70%
-        )
-        no-repeat;
-  }
-
-  .portrait-shimmer::before,
-  .portrait-shimmer::after {
-    content: '';
-    position: absolute;
-    inset: -20%;
-    border-radius: 50%;
-  }
-
-  .portrait-shimmer::before {
-    background: radial-gradient(
-      ellipse at center,
-      color-mix(in srgb, var(--fg) 6%, transparent) 0%,
-      transparent 70%
-    );
-    animation: shimmer-drift-1 4s ease-in-out infinite;
-  }
-
-  .portrait-shimmer::after {
-    background: radial-gradient(
-      ellipse at center,
-      color-mix(in srgb, var(--fg) 5%, transparent) 0%,
-      transparent 70%
-    );
-    animation: shimmer-drift-2 6s ease-in-out infinite;
-  }
-
   @media (max-width: 640px) {
     .about-content {
       flex-direction: column;
-    }
-
-    .portrait-container {
-      display: none;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .portrait-shimmer {
-      animation: none;
-      opacity: 0.85;
-    }
-    .portrait-shimmer::before,
-    .portrait-shimmer::after {
-      animation: none;
     }
   }
 </style>

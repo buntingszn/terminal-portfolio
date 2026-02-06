@@ -53,48 +53,6 @@
   }
 }
 
-/* Portrait shimmer — 3 layers at incommensurate periods */
-@keyframes shimmer-drift-1 {
-  0%,
-  100% {
-    transform: translate(0, 0);
-  }
-  50% {
-    transform: translate(15%, -10%);
-  }
-}
-
-@keyframes shimmer-drift-2 {
-  0%,
-  100% {
-    transform: translate(0, 0);
-  }
-  50% {
-    transform: translate(-10%, 15%);
-  }
-}
-
-@keyframes shimmer-drift-3 {
-  0%,
-  100% {
-    transform: translate(5%, 5%);
-  }
-  50% {
-    transform: translate(-15%, -5%);
-  }
-}
-
-/* Global breathing for shimmer overlay */
-@keyframes shimmer-breathe {
-  0%,
-  100% {
-    opacity: 0.7;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
 /* Direction-aware page transitions */
 @keyframes slide-out-left {
   from {

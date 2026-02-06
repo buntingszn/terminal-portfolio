@@ -4,6 +4,7 @@ import Nav from '@components/Nav.astro'
 import StatusBar from '@components/StatusBar.astro'
 import GradientHeading from '@components/GradientHeading.astro'
 import AsciiDivider from '@components/AsciiDivider.astro'
+import PortraitShimmer from '@components/PortraitShimmer.astro'
 import { getMeta, getCv } from '../lib/data'
 import portrait from '@data/assets/portrait.ascii.txt?raw'
 
@@ -18,10 +19,7 @@ const domain = new URL(cv.contact.website).hostname
   <Nav current="cv" />
 
   <section class="neofetch" aria-label="Profile overview">
-    <div class="portrait-container" aria-hidden="true">
-      <pre><code>{portrait}</code></pre>
-      <div class="portrait-shimmer"></div>
-    </div>
+    <PortraitShimmer portrait={portrait} class="cv-portrait" />
     <div class="info">
       <GradientHeading tag="h2" text={`${nameSlug}@${domain}`} class="neofetch-header" />
       <p class="contact-line">
@@ -96,80 +94,8 @@ const domain = new URL(cv.contact.website).hostname
     margin-bottom: 1rem;
   }
 
-  /* Portrait with shimmer */
-  .portrait-container {
-    flex-shrink: 0;
-    position: relative;
-    overflow: hidden;
-    color: var(--muted);
+  .cv-portrait {
     line-height: 1.2;
-  }
-
-  .portrait-container pre {
-    background: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  .portrait-container code {
-    background: none;
-    padding: 0;
-    font-size: 0.7rem;
-    white-space: pre;
-    color: var(--muted);
-  }
-
-  .portrait-shimmer {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    mix-blend-mode: screen;
-    animation: shimmer-breathe 10s ease-in-out infinite;
-    background:
-      radial-gradient(
-          ellipse 60% 40% at 30% 40%,
-          color-mix(in srgb, var(--fg) 12%, transparent) 0%,
-          transparent 70%
-        )
-        no-repeat,
-      radial-gradient(
-          ellipse 50% 50% at 70% 60%,
-          color-mix(in srgb, var(--fg) 8%, transparent) 0%,
-          transparent 70%
-        )
-        no-repeat,
-      radial-gradient(
-          ellipse 40% 60% at 50% 30%,
-          color-mix(in srgb, var(--fg) 10%, transparent) 0%,
-          transparent 70%
-        )
-        no-repeat;
-  }
-
-  .portrait-shimmer::before,
-  .portrait-shimmer::after {
-    content: '';
-    position: absolute;
-    inset: -20%;
-    border-radius: 50%;
-  }
-
-  .portrait-shimmer::before {
-    background: radial-gradient(
-      ellipse at center,
-      color-mix(in srgb, var(--fg) 6%, transparent) 0%,
-      transparent 70%
-    );
-    animation: shimmer-drift-1 4s ease-in-out infinite;
-  }
-
-  .portrait-shimmer::after {
-    background: radial-gradient(
-      ellipse at center,
-      color-mix(in srgb, var(--fg) 5%, transparent) 0%,
-      transparent 70%
-    );
-    animation: shimmer-drift-2 6s ease-in-out infinite;
   }
 
   .info {
@@ -285,24 +211,9 @@ const domain = new URL(cv.contact.website).hostname
       gap: 1rem;
     }
 
-    .portrait-container {
-      display: none;
-    }
-
     .experience-header {
       flex-direction: column;
       gap: 0.15rem;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .portrait-shimmer {
-      animation: none;
-      opacity: 0.85;
-    }
-    .portrait-shimmer::before,
-    .portrait-shimmer::after {
-      animation: none;
     }
   }
 </style>
