@@ -2,35 +2,33 @@
 import Base from '@layouts/Base.astro'
 import Nav from '@components/Nav.astro'
 import StatusBar from '@components/StatusBar.astro'
+import GradientHeading from '@components/GradientHeading.astro'
 import AsciiDivider from '@components/AsciiDivider.astro'
 import { getMeta, getCv } from '../lib/data'
 import portrait from '@data/assets/portrait.ascii.txt?raw'
 
 const meta = getMeta()
 const cv = getCv()
+
+const nameSlug = meta.name.toLowerCase().replace(/\s/g, '')
+const domain = new URL(cv.contact.website).hostname
 ---
 
 <Base title={`cv | ${meta.name}`} description={cv.summary}>
   <Nav current="cv" />
 
   <section class="neofetch" aria-label="Profile overview">
-    <div class="portrait" aria-hidden="true">
+    <div class="portrait-container" aria-hidden="true">
       <pre><code>{portrait}</code></pre>
+      <div class="portrait-shimmer"></div>
     </div>
     <div class="info">
-      <p class="header">
-        {meta.name.toLowerCase().replace(/\s/g, '')}@portfolio
+      <GradientHeading tag="h2" text={`${nameSlug}@${domain}`} class="neofetch-header" />
+      <p class="contact-line">
+        {cv.contact.email} &middot; {cv.contact.location} &middot; <a href={cv.contact.website}>{cv.contact.website}</a>
       </p>
       <p class="separator" aria-hidden="true">──────────────────</p>
-      <p><span class="key">Email</span>: {cv.contact.email}</p>
-      <p><span class="key">Location</span>: {cv.contact.location}</p>
-      <p>
-        <span class="key">Website</span>: <a href={cv.contact.website}
-          >{cv.contact.website}</a
-        >
-      </p>
-      <p class="separator" aria-hidden="true">──────────────────</p>
-      <p><span class="key">Summary</span>: {cv.summary}</p>
+      <p>{cv.summary}</p>
     </div>
   </section>
 
@@ -98,19 +96,22 @@ const cv = getCv()
     margin-bottom: 1rem;
   }
 
-  .portrait {
+  /* Portrait with shimmer */
+  .portrait-container {
     flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
     color: var(--muted);
     line-height: 1.2;
   }
 
-  .portrait pre {
+  .portrait-container pre {
     background: none;
     padding: 0;
     margin: 0;
   }
 
-  .portrait code {
+  .portrait-container code {
     background: none;
     padding: 0;
     font-size: 0.7rem;
@@ -118,21 +119,90 @@ const cv = getCv()
     color: var(--muted);
   }
 
+  .portrait-shimmer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    animation: shimmer-breathe 10s ease-in-out infinite;
+    background:
+      radial-gradient(
+          ellipse 60% 40% at 30% 40%,
+          color-mix(in srgb, var(--fg) 12%, transparent) 0%,
+          transparent 70%
+        )
+        no-repeat,
+      radial-gradient(
+          ellipse 50% 50% at 70% 60%,
+          color-mix(in srgb, var(--fg) 8%, transparent) 0%,
+          transparent 70%
+        )
+        no-repeat,
+      radial-gradient(
+          ellipse 40% 60% at 50% 30%,
+          color-mix(in srgb, var(--fg) 10%, transparent) 0%,
+          transparent 70%
+        )
+        no-repeat;
+  }
+
+  .portrait-shimmer::before,
+  .portrait-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: -20%;
+    border-radius: 50%;
+  }
+
+  .portrait-shimmer::before {
+    background: radial-gradient(
+      ellipse at center,
+      color-mix(in srgb, var(--fg) 6%, transparent) 0%,
+      transparent 70%
+    );
+    animation: shimmer-drift-1 4s ease-in-out infinite;
+  }
+
+  .portrait-shimmer::after {
+    background: radial-gradient(
+      ellipse at center,
+      color-mix(in srgb, var(--fg) 5%, transparent) 0%,
+      transparent 70%
+    );
+    animation: shimmer-drift-2 6s ease-in-out infinite;
+  }
+
   .info {
     flex: 1;
     min-width: 0;
+  }
+
+  .info :global(.neofetch-header) {
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .contact-line {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    word-break: break-word;
+  }
+
+  .contact-line a {
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .contact-line a:hover {
+    color: var(--accent);
   }
 
   .info p {
     margin-bottom: 0.25rem;
     line-height: 1.5;
     word-break: break-word;
-  }
-
-  .header {
-    color: var(--accent);
-    font-weight: 700;
-    font-size: 1.1rem;
   }
 
   .separator {
@@ -215,13 +285,24 @@ const cv = getCv()
       gap: 1rem;
     }
 
-    .portrait {
+    .portrait-container {
       display: none;
     }
 
     .experience-header {
       flex-direction: column;
       gap: 0.15rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .portrait-shimmer {
+      animation: none;
+      opacity: 0.85;
+    }
+    .portrait-shimmer::before,
+    .portrait-shimmer::after {
+      animation: none;
     }
   }
 </style>

@@ -2,21 +2,21 @@
 import Base from '@layouts/Base.astro'
 import Nav from '@components/Nav.astro'
 import StatusBar from '@components/StatusBar.astro'
-import AsciiBox from '@components/AsciiBox.astro'
+import GradientHeading from '@components/GradientHeading.astro'
 import { getMeta, getLinks } from '../lib/data'
 
 const meta = getMeta()
 const { links } = getLinks()
 
 const iconMap: Record<string, string> = {
-  github: '◆',
-  mail: '✉',
-  linkedin: '◈',
+  github: 'gh',
+  mail: '@',
+  linkedin: 'in',
   terminal: '>_',
 }
 
 function getIcon(icon: string): string {
-  return iconMap[icon] ?? '›'
+  return iconMap[icon] ?? '>'
 }
 ---
 
@@ -26,23 +26,28 @@ function getIcon(icon: string): string {
 >
   <Nav current="links" />
 
-  <h1>Links</h1>
+  <GradientHeading text="Links" />
 
-  <AsciiBox title="connections">
+  <section class="link-section" aria-label="External links">
     <ul class="link-list">
       {
         links.map((link) => (
           <li>
             <a href={link.url} target="_blank" rel="noopener">
+              <span class="hover-prefix" aria-hidden="true">
+                &gt;
+              </span>
               <span class="icon">{getIcon(link.icon)}</span>
-              <span class="label">{link.label}</span>
-              <span class="url">&mdash; {link.url}</span>
+              <span class="link-content">
+                <span class="label">{link.label}</span>
+                <span class="url">{link.url}</span>
+              </span>
             </a>
           </li>
         ))
       }
     </ul>
-  </AsciiBox>
+  </section>
 
   <StatusBar
     left="~/links"
@@ -52,48 +57,49 @@ function getIcon(icon: string): string {
 </Base>
 
 <style>
-  h1 {
+  :global(.gradient-heading) {
     font-size: 1.5rem;
     margin-bottom: 1.5rem;
-    color: var(--fg);
   }
 
   .link-list {
     list-style: none;
     padding: 0;
     margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
   }
 
   .link-list li {
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .link-list li:last-child {
-    border-bottom: none;
-  }
-
-  .link-list li:hover {
-    background-color: color-mix(in srgb, var(--accent) 8%, transparent);
+    padding: 0;
   }
 
   .link-list a {
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
     gap: 0.5rem;
     color: var(--fg);
     text-decoration: none;
-    padding: 0.25rem 0;
+    padding: 0.4rem 0;
     transition: color 0.2s ease;
-  }
-
-  .link-list a:hover .label {
-    color: var(--accent);
   }
 
   .link-list a:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  .hover-prefix {
+    color: var(--accent);
+    width: 1ch;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  .link-list a:hover .hover-prefix {
+    opacity: 1;
   }
 
   .icon {
@@ -102,20 +108,30 @@ function getIcon(icon: string): string {
     flex-shrink: 0;
     text-align: center;
     font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .link-content {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
   }
 
   .label {
     font-weight: 700;
-    white-space: nowrap;
     transition: color 0.2s ease;
+  }
+
+  .link-list a:hover .label {
+    color: var(--accent);
   }
 
   .url {
     color: var(--muted);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    min-width: 0;
+    padding-left: 0;
   }
 </style>

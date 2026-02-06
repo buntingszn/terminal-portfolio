@@ -1,0 +1,55 @@
+---
+interface Props {
+  tag?: 'h1' | 'h2' | 'h3'
+  text: string
+  class?: string
+}
+
+const { tag: Tag = 'h1', text, class: className } = Astro.props
+---
+
+<Tag class:list={['gradient-heading', className]}>
+  {text}
+</Tag>
+
+<style>
+  .gradient-heading {
+    background: linear-gradient(
+      90deg,
+      var(--accent) 0%,
+      color-mix(in oklch, var(--accent), var(--fg) 50%) 50%,
+      var(--accent) 100%
+    );
+    background-size: 200% 100%;
+    background-position: var(--gradient-pos, 0%) 0;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    animation: gradient-sweep 8s ease-in-out infinite alternate;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gradient-heading {
+      background: none;
+      color: var(--accent);
+      animation: none;
+    }
+  }
+
+  /* Fallback for browsers without @property support */
+  @supports not (background: paint(something)) {
+    .gradient-heading {
+      background: linear-gradient(
+        90deg,
+        var(--accent),
+        color-mix(in oklch, var(--accent), var(--fg) 50%),
+        var(--accent)
+      );
+      background-size: 200% 100%;
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: gradient-sweep 8s ease-in-out infinite alternate;
+    }
+  }
+</style>

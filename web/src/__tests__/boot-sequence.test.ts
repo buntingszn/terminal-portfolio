@@ -10,27 +10,44 @@ const sampleBootMessages = [
 /**
  * Replicate BootSequence.astro inline script logic for testing.
  * The original uses `is:inline` with `define:vars` to inject bootMessages.
+ * Updated to match TUI-aligned behavior: 80ms delay, no fade, blinking cursor.
  */
-function installBootSequence(bootMessages: Array<{ type: string; text: string }>) {
+function installBootSequence(
+  bootMessages: Array<{ type: string; text: string }>,
+) {
   const screen = document.getElementById('boot-screen')
   const container = document.getElementById('boot-messages')
 
-  // Reset visibility (remove hidden class to simulate first visit)
-  screen?.classList.remove('hidden')
-
+  // Boot screen starts hidden (matches production HTML).
+  // On return visits, it stays hidden — nothing to do.
   if (sessionStorage.getItem('boot-done')) {
-    screen?.classList.add('hidden')
     return { cleanup: () => {} }
   }
 
+  // First visit: show the boot screen
+  screen?.classList.remove('hidden')
+
   let currentIndex = 0
   let timer: ReturnType<typeof setTimeout> | null = null
-  const delay = 50 // faster for tests (original is 200)
+  const delay = 40 // faster for tests (production is 80ms)
+  const finalLineDelay = 75 // faster for tests (production is 150ms)
+  let cursor: HTMLSpanElement | null = null
+
+  function createCursor() {
+    cursor = document.createElement('span')
+    cursor.className = 'boot-cursor'
+    cursor.textContent = '\u2588'
+    cursor.setAttribute('aria-hidden', 'true')
+    return cursor
+  }
 
   function addMessage() {
     if (!container) return
     if (currentIndex >= bootMessages.length) {
-      finish()
+      // Start blinking cursor after all lines
+      if (cursor) cursor.classList.add('blinking')
+      // Pause with blinking cursor before dismissal
+      timer = setTimeout(finish, 250)
       return
     }
 
@@ -38,9 +55,22 @@ function installBootSequence(bootMessages: Array<{ type: string; text: string }>
     const line = document.createElement('div')
     line.className = 'boot-line ' + msg.type
     line.textContent = msg.text
+
+    // Move cursor to end of latest line
+    if (cursor && cursor.parentNode) {
+      cursor.parentNode.removeChild(cursor)
+    }
+    if (!cursor) cursor = createCursor()
+    line.appendChild(cursor)
+    cursor.classList.remove('blinking')
+
     container.appendChild(line)
     currentIndex++
-    timer = setTimeout(addMessage, delay)
+
+    // Use longer delay before the final line
+    const nextDelay =
+      currentIndex === bootMessages.length - 1 ? finalLineDelay : delay
+    timer = setTimeout(addMessage, nextDelay)
   }
 
   function finish() {
@@ -102,17 +132,17 @@ describe('BootSequence', () => {
 
       // First message renders immediately
       expect(container.children.length).toBe(1)
-      expect(container.children[0].textContent).toBe('BIOS v1.0')
+      expect(container.children[0].textContent).toContain('BIOS v1.0')
 
       // Advance timer for second message
-      vi.advanceTimersByTime(50)
+      vi.advanceTimersByTime(40)
       expect(container.children.length).toBe(2)
-      expect(container.children[1].textContent).toBe('Memory check...')
+      expect(container.children[1].textContent).toContain('Memory check...')
 
-      // Advance timer for third message
-      vi.advanceTimersByTime(50)
+      // Advance timer for third message (uses finalLineDelay = 75)
+      vi.advanceTimersByTime(75)
       expect(container.children.length).toBe(3)
-      expect(container.children[2].textContent).toBe('OK')
+      expect(container.children[2].textContent).toContain('OK')
 
       cleanup()
     })
@@ -121,32 +151,65 @@ describe('BootSequence', () => {
       const { cleanup } = installBootSequence(sampleBootMessages)
       const container = document.getElementById('boot-messages')!
 
-      expect(container.children[0].className).toBe('boot-line system')
+      expect(container.children[0].className).toContain('boot-line system')
 
-      vi.advanceTimersByTime(50)
-      expect(container.children[1].className).toBe('boot-line info')
+      vi.advanceTimersByTime(40)
+      expect(container.children[1].className).toContain('boot-line info')
 
-      vi.advanceTimersByTime(50)
-      expect(container.children[2].className).toBe('boot-line success')
+      vi.advanceTimersByTime(75)
+      expect(container.children[2].className).toContain('boot-line success')
 
       cleanup()
     })
 
-    it('sets sessionStorage boot-done after all messages', () => {
+    it('creates a cursor element on the latest line', () => {
+      const { cleanup } = installBootSequence(sampleBootMessages)
+      const container = document.getElementById('boot-messages')!
+
+      // Cursor should be on the first line
+      const cursor = container.querySelector('.boot-cursor')
+      expect(cursor).not.toBeNull()
+      expect(cursor?.textContent).toBe('\u2588')
+      expect(cursor?.parentElement).toBe(container.children[0])
+
+      // After advancing, cursor moves to next line
+      vi.advanceTimersByTime(40)
+      const cursor2 = container.querySelector('.boot-cursor')
+      expect(cursor2?.parentElement).toBe(container.children[1])
+
+      cleanup()
+    })
+
+    it('cursor starts blinking after all messages complete', () => {
+      const { cleanup } = installBootSequence(sampleBootMessages)
+      const container = document.getElementById('boot-messages')!
+
+      // Advance through all messages
+      vi.advanceTimersByTime(40 + 75)
+      // Now the last addMessage call fires which triggers the "all done" branch
+      vi.advanceTimersByTime(40)
+
+      const cursor = container.querySelector('.boot-cursor')
+      expect(cursor?.classList.contains('blinking')).toBe(true)
+
+      cleanup()
+    })
+
+    it('sets sessionStorage boot-done after all messages and pause', () => {
       const { cleanup } = installBootSequence(sampleBootMessages)
 
-      // Advance through all messages + final timer
-      vi.advanceTimersByTime(50 * sampleBootMessages.length)
+      // Advance through all messages + blinking pause
+      vi.advanceTimersByTime(40 + 75 + 40 + 250)
       expect(sessionStorage.getItem('boot-done')).toBe('1')
 
       cleanup()
     })
 
-    it('hides boot screen after all messages complete', () => {
+    it('hides boot screen after all messages and pause complete', () => {
       const { cleanup } = installBootSequence(sampleBootMessages)
       const screen = document.getElementById('boot-screen')
 
-      vi.advanceTimersByTime(50 * sampleBootMessages.length)
+      vi.advanceTimersByTime(40 + 75 + 40 + 250)
       expect(screen?.classList.contains('hidden')).toBe(true)
 
       cleanup()

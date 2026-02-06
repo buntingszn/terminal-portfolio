@@ -75,6 +75,42 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
     <CommandBar />
     <HelpOverlay />
     <KeyboardNav />
+    <script is:inline>
+      ;(function () {
+        const sectionOrder = { '/': 0, '/work': 1, '/work/': 1, '/cv': 2, '/cv/': 2, '/links': 3, '/links/': 3 }
+        let pendingDir = 'none'
+
+        function getIndex(path) {
+          if (path === '/' || path === '') return 0
+          const clean = path.replace(/\/$/, '')
+          return sectionOrder[clean] != null ? sectionOrder[clean] : -1
+        }
+
+        document.addEventListener('astro:before-preparation', function (e) {
+          const fromIdx = getIndex(window.location.pathname)
+          const toIdx = getIndex(new URL(e.to, window.location.origin).pathname)
+          pendingDir = 'none'
+          if (fromIdx >= 0 && toIdx >= 0 && fromIdx !== toIdx) {
+            pendingDir = toIdx > fromIdx ? 'forward' : 'backward'
+          }
+        })
+
+        document.addEventListener('astro:after-swap', function () {
+          const main = document.getElementById('main-content')
+          if (!main || pendingDir === 'none') return
+          const anim = pendingDir === 'forward' ? 'slide-in-from-right' : 'slide-in-from-left'
+          main.style.animation = 'none'
+          // Force reflow to restart animation
+          void main.offsetHeight
+          main.style.animation = anim + ' 150ms cubic-bezier(0.4, 0, 0.2, 1) both'
+          main.addEventListener('animationend', function handler() {
+            main.style.animation = ''
+            main.removeEventListener('animationend', handler)
+          })
+          pendingDir = 'none'
+        })
+      })()
+    </script>
   </body>
 </html>
 
@@ -83,6 +119,7 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
   @import '../styles/fonts.css';
   @import '../styles/tokens.css';
   @import '../styles/typography.css';
+  @import '../styles/animations.css';
   @import '../styles/crt.css';
 
   /* Skip-to-content link for keyboard users */
@@ -135,4 +172,5 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
     padding: 2rem 1rem;
     flex: 1;
   }
+
 </style>

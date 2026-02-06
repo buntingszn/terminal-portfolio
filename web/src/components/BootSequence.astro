@@ -4,7 +4,7 @@ import bootMessagesData from '@data/assets/boot-messages.json'
 const bootMessages = bootMessagesData.messages
 ---
 
-<div id="boot-screen" class="boot-screen" aria-hidden="true">
+<div id="boot-screen" class="boot-screen hidden" aria-hidden="true" transition:persist>
   <div id="boot-messages" class="boot-messages"></div>
 </div>
 
@@ -32,8 +32,7 @@ const bootMessages = bootMessagesData.messages
   }
 
   .boot-line {
-    opacity: 0;
-    animation: fadeIn 0.1s ease forwards;
+    /* Lines appear instantly — no fade */
   }
 
   .boot-line.system {
@@ -50,10 +49,13 @@ const bootMessages = bootMessagesData.messages
     font-weight: bold;
   }
 
-  @keyframes fadeIn {
-    to {
-      opacity: 1;
-    }
+  .boot-cursor {
+    display: inline;
+    color: var(--accent);
+  }
+
+  .boot-cursor.blinking {
+    animation: cursor-blink 1.06s step-end infinite;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -64,18 +66,29 @@ const bootMessages = bootMessagesData.messages
 </style>
 
 <script is:inline define:vars={{ bootMessages }}>
-  if (sessionStorage.getItem('boot-done')) {
-    document.getElementById('boot-screen')?.classList.add('hidden')
-  } else {
+  if (!sessionStorage.getItem('boot-done')) {
     const screen = document.getElementById('boot-screen')
     const container = document.getElementById('boot-messages')
     let currentIndex = 0
     let timer = null
-    const delay = 200
+    const delay = 80
+    const finalLineDelay = 150
+    let cursor = null
+
+    function createCursor() {
+      cursor = document.createElement('span')
+      cursor.className = 'boot-cursor'
+      cursor.textContent = '\u2588'
+      cursor.setAttribute('aria-hidden', 'true')
+      return cursor
+    }
 
     function addMessage() {
       if (currentIndex >= bootMessages.length) {
-        finish()
+        // Start blinking cursor after all lines
+        if (cursor) cursor.classList.add('blinking')
+        // Pause with blinking cursor before dismissal
+        timer = setTimeout(finish, 500)
         return
       }
 
@@ -83,9 +96,22 @@ const bootMessages = bootMessagesData.messages
       const line = document.createElement('div')
       line.className = 'boot-line ' + msg.type
       line.textContent = msg.text
+
+      // Move cursor to end of latest line
+      if (cursor && cursor.parentNode) {
+        cursor.parentNode.removeChild(cursor)
+      }
+      if (!cursor) cursor = createCursor()
+      line.appendChild(cursor)
+      cursor.classList.remove('blinking')
+
       container.appendChild(line)
       currentIndex++
-      timer = setTimeout(addMessage, delay)
+
+      // Use longer delay before the final line
+      const nextDelay =
+        currentIndex === bootMessages.length - 1 ? finalLineDelay : delay
+      timer = setTimeout(addMessage, nextDelay)
     }
 
     function finish() {
@@ -100,7 +126,7 @@ const bootMessages = bootMessagesData.messages
             screen.classList.add('hidden')
           }, 300)
         }
-      }, 500)
+      }, 0)
     }
 
     function skipBoot() {
@@ -116,6 +142,8 @@ const bootMessages = bootMessagesData.messages
     document.addEventListener('keydown', skipBoot)
     document.addEventListener('click', skipBoot)
 
+    // Show boot screen (starts hidden to prevent flash on client-side nav)
+    if (screen) screen.classList.remove('hidden')
     addMessage()
   }
 </script>

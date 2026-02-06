@@ -2,32 +2,42 @@
 import Base from '@layouts/Base.astro'
 import Nav from '@components/Nav.astro'
 import StatusBar from '@components/StatusBar.astro'
-import AsciiBox from '@components/AsciiBox.astro'
+import GradientHeading from '@components/GradientHeading.astro'
 import { getMeta, getWork } from '../lib/data'
 
 const meta = getMeta()
 const { projects } = getWork()
 const featured = projects.filter((p) => p.featured)
 const others = projects.filter((p) => !p.featured)
+const sorted = [...featured, ...others]
 ---
 
 <Base title={`Work | ${meta.name}`} description="Projects and work">
   <Nav current="work" />
 
-  <h1>Projects</h1>
+  <GradientHeading text="Projects" />
 
-  {
-    featured.length > 0 && (
-      <section class="featured" aria-label="Featured projects">
-        <h2 class="section-heading">Featured</h2>
-        {featured.map((project) => (
-          <AsciiBox title={project.title}>
-            <p>{project.description}</p>
-            <div class="tags">
+  <section class="project-list" aria-label="Projects">
+    {
+      sorted.map((project) => (
+        <div class="project">
+          <div class="project-header">
+            <span class="project-title">
+              {project.featured && (
+                <span class="featured-star" aria-label="Featured">
+                  ★{' '}
+                </span>
+              )}
+              {project.title}
+            </span>
+            <span class="tags">
               {project.tags.map((tag) => (
                 <span class="tag">{tag}</span>
               ))}
-            </div>
+            </span>
+          </div>
+          <div class="project-body">
+            <p class="description">{project.description}</p>
             <div class="project-links">
               {project.url && (
                 <a href={project.url} target="_blank" rel="noopener">
@@ -40,41 +50,11 @@ const others = projects.filter((p) => !p.featured)
                 </a>
               )}
             </div>
-          </AsciiBox>
-        ))}
-      </section>
-    )
-  }
-
-  {
-    others.length > 0 && (
-      <section class="other-projects" aria-label="Other projects">
-        <h2 class="section-heading">Other</h2>
-        {others.map((project) => (
-          <AsciiBox title={project.title}>
-            <p>{project.description}</p>
-            <div class="tags">
-              {project.tags.map((tag) => (
-                <span class="tag">{tag}</span>
-              ))}
-            </div>
-            <div class="project-links">
-              {project.url && (
-                <a href={project.url} target="_blank" rel="noopener">
-                  [visit]
-                </a>
-              )}
-              {project.repo && (
-                <a href={project.repo} target="_blank" rel="noopener">
-                  [repo]
-                </a>
-              )}
-            </div>
-          </AsciiBox>
-        ))}
-      </section>
-    )
-  }
+          </div>
+        </div>
+      ))
+    }
+  </section>
 
   <StatusBar
     left="~/work"
@@ -84,42 +64,64 @@ const others = projects.filter((p) => !p.featured)
 </Base>
 
 <style>
-  h1 {
+  :global(.gradient-heading) {
     font-size: 1.5rem;
     margin-bottom: 1.5rem;
-    color: var(--fg);
   }
 
-  .section-heading {
+  .project-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .project {
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .project:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .project-title {
+    color: var(--accent);
+    font-weight: 700;
     font-size: 1rem;
-    color: var(--muted);
-    margin-bottom: 1rem;
-    font-weight: 400;
   }
 
-  section {
-    margin-bottom: 2rem;
-  }
-
-  section :global(.ascii-box) {
-    margin-bottom: 1rem;
-  }
-
-  p {
-    margin-bottom: 0.75rem;
-    line-height: 1.6;
+  .featured-star {
+    color: var(--accent);
   }
 
   .tags {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-bottom: 0.5rem;
   }
 
   .tag {
     color: var(--muted);
     font-size: 0.8rem;
+  }
+
+  .project-body {
+    padding-left: 1.5rem;
+  }
+
+  .description {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
   }
 
   .project-links {
@@ -141,5 +143,16 @@ const others = projects.filter((p) => !p.featured)
   .project-links a:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  @media (max-width: 480px) {
+    .project-header {
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .project-body {
+      padding-left: 0;
+    }
   }
 </style>

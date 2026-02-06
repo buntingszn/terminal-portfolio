@@ -1,0 +1,156 @@
+/* Animation keyframes and @property registrations */
+
+/* Animatable gradient position property */
+@property --gradient-pos {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
+/* Gradient sweep for headings — asymmetric multi-stop to simulate TUI's 3 incommensurate sinusoids */
+@keyframes gradient-sweep {
+  0% {
+    --gradient-pos: 0%;
+  }
+  18% {
+    --gradient-pos: 35%;
+  }
+  42% {
+    --gradient-pos: 60%;
+  }
+  58% {
+    --gradient-pos: 45%;
+  }
+  76% {
+    --gradient-pos: 85%;
+  }
+  100% {
+    --gradient-pos: 100%;
+  }
+}
+
+/* Tab glow pulse — fires once on page load for active tab */
+@keyframes tab-glow-pulse {
+  0% {
+    color: var(--accent-glow);
+    text-shadow: 0 0 6px var(--accent-glow);
+  }
+  100% {
+    color: var(--accent);
+    text-shadow: none;
+  }
+}
+
+/* Cursor blink — 1.06s period (530ms half) to match TUI */
+@keyframes cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Portrait shimmer — 3 layers at incommensurate periods */
+@keyframes shimmer-drift-1 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(15%, -10%);
+  }
+}
+
+@keyframes shimmer-drift-2 {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-10%, 15%);
+  }
+}
+
+@keyframes shimmer-drift-3 {
+  0%,
+  100% {
+    transform: translate(5%, 5%);
+  }
+  50% {
+    transform: translate(-15%, -5%);
+  }
+}
+
+/* Global breathing for shimmer overlay */
+@keyframes shimmer-breathe {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Direction-aware page transitions */
+@keyframes slide-out-left {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-33%);
+    opacity: 0;
+  }
+}
+
+@keyframes slide-in-from-right {
+  from {
+    transform: translateX(33%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out-right {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(33%);
+    opacity: 0;
+  }
+}
+
+@keyframes slide-in-from-left {
+  from {
+    transform: translateX(-33%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Reduced motion: disable all animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
