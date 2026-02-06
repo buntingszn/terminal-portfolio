@@ -12,8 +12,8 @@ const (
 	transitionID = "section-transition"
 
 	// baseTransitionSteps is the step count for adjacent section transitions.
-	// Each step takes ~16ms (one animation frame), so 6 steps ≈ 96ms.
-	baseTransitionSteps = 6
+	// Each step takes ~16ms (one animation frame), so 10 steps ≈ 160ms.
+	baseTransitionSteps = 10
 
 	// extraStepsPerDistance adds steps for each additional section distance,
 	// making distant transitions slightly longer than adjacent ones.
@@ -99,8 +99,10 @@ func (t *TransitionManager) Update(msg tea.Msg) tea.Cmd {
 }
 
 // View renders the mid-transition view by blending fromView and toView.
-// Uses a simple horizontal offset effect. Falls back to toView for very
-// small terminals (width < 20).
+// Both views slide simultaneously: the old drifts out while the new slides
+// in. Individual lines cross over at staggered progress points, producing
+// a cascade/wave instead of a single hard cut. Falls back to toView for
+// very small terminals (width < 20).
 func (t *TransitionManager) View(fromView, toView string, width int) string {
 	if width < 20 || t.steps <= 0 {
 		return toView
@@ -109,8 +111,15 @@ func (t *TransitionManager) View(fromView, toView string, width int) string {
 	progress := float64(t.step) / float64(t.steps)
 	eased := easeInOut(progress)
 
-	// Calculate horizontal offset for the "old" view sliding out.
-	offset := int(eased * float64(width) / 3)
+	// Subtle slide distance (width/5 keeps motion gentle).
+	maxSlide := width / 5
+	if maxSlide < 2 {
+		maxSlide = 2
+	}
+
+	// Both views move continuously across the full animation.
+	fromOffset := int(eased * float64(maxSlide))
+	toOffset := int((1.0 - eased) * float64(maxSlide))
 
 	fromLines := strings.Split(fromView, "\n")
 	toLines := strings.Split(toView, "\n")
@@ -127,22 +136,26 @@ func (t *TransitionManager) View(fromView, toView string, width int) string {
 			b.WriteByte('\n')
 		}
 
-		if eased < 0.5 {
-			// First half: old view sliding out.
-			line := ""
-			if i < len(fromLines) {
-				line = fromLines[i]
-			}
-			shifted := shiftLine(line, offset, int(t.direction), width)
+		fromLine := ""
+		if i < len(fromLines) {
+			fromLine = fromLines[i]
+		}
+		toLine := ""
+		if i < len(toLines) {
+			toLine = toLines[i]
+		}
+
+		// Staggered crossover: each line switches at a slightly different
+		// progress point, creating a cascade instead of a hard cut.
+		// Top lines cross at ~35% progress, bottom lines at ~65%.
+		lineRatio := float64(i) / float64(max(maxLines-1, 1))
+		switchPoint := 0.35 + lineRatio*0.30
+
+		if eased < switchPoint {
+			shifted := shiftLine(fromLine, fromOffset, int(t.direction), width)
 			b.WriteString(shifted)
 		} else {
-			// Second half: new view sliding in.
-			line := ""
-			if i < len(toLines) {
-				line = toLines[i]
-			}
-			reverseOffset := int((1.0 - eased) * float64(width) / 3)
-			shifted := shiftLine(line, reverseOffset, -int(t.direction), width)
+			shifted := shiftLine(toLine, toOffset, -int(t.direction), width)
 			b.WriteString(shifted)
 		}
 	}
