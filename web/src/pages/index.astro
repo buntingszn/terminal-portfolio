@@ -5,6 +5,7 @@ import StatusBar from '@components/StatusBar.astro'
 import GradientHeading from '@components/GradientHeading.astro'
 import AsciiDivider from '@components/AsciiDivider.astro'
 import PortraitShimmer from '@components/PortraitShimmer.astro'
+import TerminalEmbed from '@components/TerminalEmbed.astro'
 import { getMeta, getAbout } from '../lib/data'
 
 const meta = getMeta()
@@ -48,6 +49,10 @@ import portraitRaw from '@data/assets/portrait.ascii.txt?raw'
       </div>
     </div>
   </section>
+
+  <AsciiDivider />
+
+  <TerminalEmbed />
 
   <StatusBar
     left="~/home"

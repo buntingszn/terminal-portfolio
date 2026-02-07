@@ -1,3 +1,5 @@
+//go:build !js
+
 package config
 
 import (
@@ -7,26 +9,17 @@ import (
 	"time"
 )
 
-// Config holds the application configuration.
-type Config struct {
-	SSHPort     int
-	DataDir     string
-	MaxSessions int
-	// IdleTimeout controls how long a session can remain idle before being
-	// disconnected. A value of 0 disables idle timeout entirely.
-	IdleTimeout time.Duration
-	Debug       bool
-}
-
 // Load reads configuration from TERMINAL_PORTFOLIO_ environment variables
 // with sensible defaults.
 func Load() (*Config, error) {
 	cfg := &Config{
-		SSHPort:     2222,
-		DataDir:     "../data",
-		MaxSessions: 100,
-		IdleTimeout: 30 * time.Minute,
-		Debug:       false,
+		SSHPort:         2222,
+		DataDir:         "../data",
+		MaxSessions:     100,
+		IdleTimeout:     30 * time.Minute,
+		RateLimitPerIP:  10,
+		RateLimitWindow: time.Minute,
+		Debug:           false,
 	}
 
 	if v := os.Getenv("TERMINAL_PORTFOLIO_SSH_PORT"); v != "" {
@@ -55,6 +48,22 @@ func Load() (*Config, error) {
 			return nil, fmt.Errorf("invalid idle timeout: %w", err)
 		}
 		cfg.IdleTimeout = d
+	}
+
+	if v := os.Getenv("TERMINAL_PORTFOLIO_RATE_LIMIT_PER_IP"); v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil {
+			return nil, fmt.Errorf("invalid rate limit per IP: %w", err)
+		}
+		cfg.RateLimitPerIP = n
+	}
+
+	if v := os.Getenv("TERMINAL_PORTFOLIO_RATE_LIMIT_WINDOW"); v != "" {
+		d, err := time.ParseDuration(v)
+		if err != nil {
+			return nil, fmt.Errorf("invalid rate limit window: %w", err)
+		}
+		cfg.RateLimitWindow = d
 	}
 
 	if v := os.Getenv("TERMINAL_PORTFOLIO_DEBUG"); v != "" {

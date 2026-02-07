@@ -1,0 +1,274 @@
+---
+// TerminalEmbed — xterm.js terminal connected to WASM TUI
+---
+
+<section class="terminal-section" aria-label="Interactive Terminal">
+  <div class="terminal-header">
+    <span class="terminal-dot red"></span>
+    <span class="terminal-dot yellow"></span>
+    <span class="terminal-dot green"></span>
+    <span class="terminal-title">terminal-portfolio</span>
+  </div>
+  <div class="terminal-container">
+    <div id="terminal-embed" class="terminal-viewport"></div>
+    <div id="terminal-loading" class="terminal-loading">
+      <span class="loading-text">Loading terminal&hellip;</span>
+    </div>
+    <div id="terminal-error" class="terminal-error" hidden>
+      Terminal failed to load.
+      <a href="javascript:location.reload()">Retry</a>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { Terminal } from '@xterm/xterm'
+  import { FitAddon } from '@xterm/addon-fit'
+
+  interface WasmWindow extends Window {
+    terminalPortfolioWrite: (data: string | Uint8Array) => void
+    terminalPortfolioInput?: (data: string) => void
+    terminalPortfolioResize?: (cols: number, rows: number) => void
+    onWasmReady: () => void
+    Go: new () => {
+      importObject: WebAssembly.Imports
+      run: (instance: WebAssembly.Instance) => void
+    }
+  }
+
+  const w = window as unknown as WasmWindow
+
+  async function initTerminal() {
+    const container = document.getElementById('terminal-embed')
+    const loadingEl = document.getElementById('terminal-loading')
+    const errorEl = document.getElementById('terminal-error')
+    if (!container || !loadingEl || !errorEl) return
+
+    // Skip if already initialized (e.g. after Astro view transition)
+    if (container.dataset.initialized === 'true') return
+    container.dataset.initialized = 'true'
+
+    // Wait for JetBrains Mono to load before creating the terminal.
+    // xterm.js builds a glyph atlas on init — if the font isn't ready,
+    // box-drawing characters render with the wrong fallback font.
+    try {
+      await document.fonts.load("14px 'JetBrains Mono'")
+    } catch {
+      // Font API may not be available; proceed anyway
+    }
+
+    const isDark =
+      document.documentElement.getAttribute('data-theme') !== 'light'
+    const bg = isDark ? '#0d0d0d' : '#f5f2ed'
+    const fg = isDark ? '#c8c0b8' : '#1a1a1a'
+
+    const term = new Terminal({
+      cursorBlink: true,
+      fontSize: 14,
+      fontFamily: "'JetBrains Mono', monospace",
+      theme: { background: bg, foreground: fg, cursor: fg },
+      rows: 24,
+      cols: 80,
+      scrollback: 0,
+      customGlyphs: true,
+      allowProposedApi: true,
+    })
+
+    const fitAddon = new FitAddon()
+    term.loadAddon(fitAddon)
+    term.open(container)
+
+    // Initial fit
+    try {
+      fitAddon.fit()
+    } catch {
+      // fit can fail if element isn't visible yet
+    }
+
+    // Resize handling
+    const resizeObserver = new ResizeObserver(() => {
+      try {
+        fitAddon.fit()
+      } catch {
+        // ignore
+      }
+    })
+    resizeObserver.observe(container)
+
+    // Wire output from WASM → xterm (receives Uint8Array of raw UTF-8 bytes)
+    w.terminalPortfolioWrite = (data: string | Uint8Array) => {
+      term.write(data)
+    }
+
+    // Called when WASM Go runtime is ready
+    w.onWasmReady = () => {
+      loadingEl.hidden = true
+      // Send initial size
+      const terminalResize = w.terminalPortfolioResize
+      if (terminalResize) {
+        terminalResize(term.cols, term.rows)
+      }
+    }
+
+    // Wire keyboard input from xterm → WASM
+    term.onData((data: string) => {
+      const terminalInput = w.terminalPortfolioInput
+      if (terminalInput) {
+        terminalInput(data)
+      }
+    })
+
+    // Wire resize from xterm → WASM
+    term.onResize(({ cols, rows }: { cols: number; rows: number }) => {
+      const terminalResize = w.terminalPortfolioResize
+      if (terminalResize) {
+        terminalResize(cols, rows)
+      }
+    })
+
+    // Load WASM
+    loadWasm(loadingEl, errorEl)
+  }
+
+  async function loadWasm(loadingEl: HTMLElement, errorEl: HTMLElement) {
+    try {
+      // wasm_exec.js sets up the Go class on globalThis
+      await loadScript('/wasm_exec.js')
+
+      const go = new w.Go()
+      const result = await WebAssembly.instantiateStreaming(
+        fetch('/main.wasm'),
+        go.importObject,
+      )
+      go.run(result.instance)
+    } catch (err) {
+      console.error('WASM load failed:', err)
+      loadingEl.hidden = true
+      errorEl.hidden = false
+    }
+  }
+
+  function loadScript(src: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // Don't load twice
+      if (document.querySelector(`script[src="${src}"]`)) {
+        resolve()
+        return
+      }
+      const s = document.createElement('script')
+      s.src = src
+      s.onload = () => resolve()
+      s.onerror = reject
+      document.head.appendChild(s)
+    })
+  }
+
+  // Initialize on page load and after Astro view transitions
+  document.addEventListener('astro:page-load', initTerminal)
+  if (document.readyState === 'complete') {
+    initTerminal()
+  }
+</script>
+
+<style>
+  @import '@xterm/xterm/css/xterm.css';
+
+  .terminal-section {
+    padding: 1.5rem 0;
+  }
+
+  /* macOS-style title bar */
+  .terminal-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .terminal-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+
+  .terminal-dot.red {
+    background: #ff5f57;
+  }
+  .terminal-dot.yellow {
+    background: #febc2e;
+  }
+  .terminal-dot.green {
+    background: #28c840;
+  }
+
+  .terminal-title {
+    margin-left: 8px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    user-select: none;
+  }
+
+  .terminal-container {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: 0 0 8px 8px;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .terminal-viewport {
+    width: 100%;
+  }
+
+  .terminal-viewport :global(.xterm) {
+    padding: 4px 8px;
+  }
+
+  /* Hide xterm's own scrollbar — the TUI has its own scroll indicators */
+  .terminal-viewport :global(.xterm-viewport) {
+    overflow-y: hidden !important;
+  }
+
+  .terminal-loading,
+  .terminal-error {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    color: var(--muted);
+    font-size: 0.9rem;
+    z-index: 1;
+  }
+
+  .loading-text {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .terminal-error {
+    color: var(--accent);
+  }
+
+  .terminal-error a {
+    color: var(--fg);
+    margin-left: 0.5rem;
+    text-decoration: underline;
+  }
+
+  .terminal-loading[hidden],
+  .terminal-error[hidden] {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .terminal-viewport :global(.xterm-cursor-layer) {
+      display: none;
+    }
+  }
+</style>

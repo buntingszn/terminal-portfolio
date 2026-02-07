@@ -5,6 +5,6 @@ export default [
   ...tseslint.configs.recommended,
   ...eslintPluginAstro.configs.recommended,
   {
-    ignores: ['dist/', '.astro/'],
+    ignores: ['dist/', '.astro/', 'public/wasm_exec.js'],
   },
 ]
