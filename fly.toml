@@ -1,0 +1,21 @@
+app = "terminal-portfolio-ssh"
+primary_region = "ord"
+
+[build]
+  dockerfile = "Dockerfile.tui"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 2222
+
+  [[services.ports]]
+    port = 22
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 100
+    soft_limit = 80
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = 256
