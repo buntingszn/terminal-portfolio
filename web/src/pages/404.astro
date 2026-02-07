@@ -1,67 +1,30 @@
 ---
-import { getMeta } from '../lib/data'
-
-const meta = getMeta()
+import Base from '@layouts/Base.astro'
+import Nav from '@components/Nav.astro'
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex" />
-    <title>404 | {meta.name}</title>
-    <style>
-      @font-face {
-        font-family: 'JetBrains Mono';
-        src: url('/fonts/JetBrainsMono-Regular.woff2') format('woff2');
-        font-weight: 400;
-        font-style: normal;
-        font-display: swap;
-      }
+<Base title="404 | Not Found">
+  <Nav />
 
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #0d0d0d;
-        color: #c8c0b8;
-        font-family: 'JetBrains Mono', monospace;
-      }
+  <section class="not-found">
+    <h1>404</h1>
+    <p class="muted">Page not found. Try one of the navigation links above.</p>
+  </section>
+</Base>
 
-      .container {
-        text-align: center;
-      }
+<style>
+  .not-found {
+    text-align: center;
+    padding: 4rem 0;
+  }
 
-      h1 {
-        font-size: 3rem;
-        color: #e05a33;
-        margin: 0 0 1rem;
-      }
+  .not-found h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
 
-      p {
-        font-size: 0.9rem;
-        color: #555250;
-        margin: 0 0 1.5rem;
-      }
-
-      a {
-        color: #e05a33;
-        text-decoration: none;
-      }
-
-      a:hover {
-        text-decoration: underline;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1>404</h1>
-      <p>Page not found.</p>
-      <a href="/">Return to terminal</a>
-    </div>
-  </body>
-</html>
+  .not-found .muted {
+    color: var(--muted);
+    font-size: 1rem;
+  }
+</style>

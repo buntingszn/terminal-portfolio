@@ -9,14 +9,14 @@ import (
 )
 
 // introTickInterval is the delay between each boot message appearing.
-const introTickInterval = 80 * time.Millisecond
+const introTickInterval = 150 * time.Millisecond
 
 // introFinalDelay is the longer delay before the final boot message appears.
-const introFinalDelay = 150 * time.Millisecond
+const introFinalDelay = 300 * time.Millisecond
 
 // introPauseDuration is the pause after all messages are revealed before
 // transitioning out of the intro.
-const introPauseDuration = 200 * time.Millisecond
+const introPauseDuration = 500 * time.Millisecond
 
 // bootMessageType identifies the color category for a boot message.
 type bootMessageType string

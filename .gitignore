@@ -25,11 +25,6 @@ Thumbs.db
 # Go
 tui/vendor/
 
-# WASM build artifacts
-tui/internal/content/embed/*.json
-web/public/main.wasm
-web/public/wasm_exec.js
-
 # Testing
 coverage/
 *.cover
