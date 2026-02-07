@@ -1,25 +1,17 @@
 ---
-// TerminalEmbed — xterm.js terminal connected to WASM TUI
+// TerminalEmbed — full-viewport xterm.js terminal connected to WASM TUI
 ---
 
-<section class="terminal-section" aria-label="Interactive Terminal">
-  <div class="terminal-header">
-    <span class="terminal-dot red"></span>
-    <span class="terminal-dot yellow"></span>
-    <span class="terminal-dot green"></span>
-    <span class="terminal-title">terminal-portfolio</span>
+<div class="terminal-fullscreen" aria-label="Interactive Terminal">
+  <div id="terminal-embed" class="terminal-viewport"></div>
+  <div id="terminal-loading" class="terminal-overlay">
+    <span class="loading-text">Loading terminal&hellip;</span>
   </div>
-  <div class="terminal-container">
-    <div id="terminal-embed" class="terminal-viewport"></div>
-    <div id="terminal-loading" class="terminal-loading">
-      <span class="loading-text">Loading terminal&hellip;</span>
-    </div>
-    <div id="terminal-error" class="terminal-error" hidden>
-      Terminal failed to load.
-      <a href="javascript:location.reload()">Retry</a>
-    </div>
+  <div id="terminal-error" class="terminal-overlay" hidden>
+    Terminal failed to load.
+    <a href="javascript:location.reload()">Retry</a>
   </div>
-</section>
+</div>
 
 <script>
   import { Terminal } from '@xterm/xterm'
@@ -44,7 +36,7 @@
     const errorEl = document.getElementById('terminal-error')
     if (!container || !loadingEl || !errorEl) return
 
-    // Skip if already initialized (e.g. after Astro view transition)
+    // Skip if already initialized
     if (container.dataset.initialized === 'true') return
     container.dataset.initialized = 'true'
 
@@ -57,8 +49,7 @@
       // Font API may not be available; proceed anyway
     }
 
-    const isDark =
-      document.documentElement.getAttribute('data-theme') !== 'light'
+    const isDark = document.documentElement.getAttribute('data-theme') !== 'light'
     const bg = isDark ? '#0d0d0d' : '#f5f2ed'
     const fg = isDark ? '#c8c0b8' : '#1a1a1a'
 
@@ -85,7 +76,7 @@
       // fit can fail if element isn't visible yet
     }
 
-    // Resize handling
+    // Resize handling — fill viewport on any size change
     const resizeObserver = new ResizeObserver(() => {
       try {
         fitAddon.fit()
@@ -163,9 +154,10 @@
     })
   }
 
-  // Initialize on page load and after Astro view transitions
-  document.addEventListener('astro:page-load', initTerminal)
-  if (document.readyState === 'complete') {
+  // Initialize on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTerminal)
+  } else {
     initTerminal()
   }
 </script>
@@ -173,60 +165,20 @@
 <style>
   @import '@xterm/xterm/css/xterm.css';
 
-  .terminal-section {
-    padding: 1.5rem 0;
-  }
-
-  /* macOS-style title bar */
-  .terminal-header {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 14px;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-bottom: none;
-    border-radius: 8px 8px 0 0;
-  }
-
-  .terminal-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-  }
-
-  .terminal-dot.red {
-    background: #ff5f57;
-  }
-  .terminal-dot.yellow {
-    background: #febc2e;
-  }
-  .terminal-dot.green {
-    background: #28c840;
-  }
-
-  .terminal-title {
-    margin-left: 8px;
-    font-size: 0.8rem;
-    color: var(--muted);
-    font-family: 'JetBrains Mono', monospace;
-    user-select: none;
-  }
-
-  .terminal-container {
+  .terminal-fullscreen {
     position: relative;
-    border: 1px solid var(--border);
-    border-radius: 0 0 8px 8px;
-    overflow: hidden;
-    background: var(--bg);
+    width: 100%;
+    height: 100%;
   }
 
   .terminal-viewport {
     width: 100%;
+    height: 100%;
   }
 
   .terminal-viewport :global(.xterm) {
-    padding: 4px 8px;
+    height: 100%;
+    padding: 4px;
   }
 
   /* Hide xterm's own scrollbar — the TUI has its own scroll indicators */
@@ -234,8 +186,7 @@
     overflow-y: hidden !important;
   }
 
-  .terminal-loading,
-  .terminal-error {
+  .terminal-overlay {
     position: absolute;
     inset: 0;
     display: flex;
@@ -251,24 +202,13 @@
     font-family: 'JetBrains Mono', monospace;
   }
 
-  .terminal-error {
-    color: var(--accent);
-  }
-
-  .terminal-error a {
+  .terminal-overlay a {
     color: var(--fg);
     margin-left: 0.5rem;
     text-decoration: underline;
   }
 
-  .terminal-loading[hidden],
-  .terminal-error[hidden] {
+  .terminal-overlay[hidden] {
     display: none;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .terminal-viewport :global(.xterm-cursor-layer) {
-      display: none;
-    }
   }
 </style>

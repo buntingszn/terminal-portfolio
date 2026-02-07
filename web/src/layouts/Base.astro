@@ -1,29 +1,159 @@
 ---
-import { ClientRouter } from 'astro:transitions'
-import { getMeta } from '../lib/data'
-import KeyboardNav from '../components/KeyboardNav.astro'
-import CommandBar from '../components/CommandBar.astro'
-import HelpOverlay from '../components/HelpOverlay.astro'
+import { getMeta, getAbout, getCv, getWork, getLinks } from '../lib/data'
 import BootSequence from '../components/BootSequence.astro'
 
 interface Props {
-  title: string
+  title?: string
   description?: string
 }
 
 const meta = getMeta()
-const { title, description = meta.oneLiner } = Astro.props
+const about = getAbout()
+const cv = getCv()
+const work = getWork()
+const links = getLinks()
+
+const { title = `${meta.name} — ${meta.title}`, description = cv.summary } = Astro.props
 const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
+
+// Build keyword list from skills, tags, and role context
+const skillKeywords = cv.skills.flatMap((g) => g.items)
+const projectTags = [...new Set(work.projects.flatMap((p) => p.tags))]
+const keywords = [
+  meta.name,
+  meta.title,
+  ...skillKeywords,
+  ...projectTags,
+  about.location,
+  'portfolio',
+  'software engineer',
+  'full-stack developer',
+  'web developer',
+].join(', ')
+
+// JSON-LD: Person
+const personLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: meta.name,
+  url: meta.siteUrl,
+  jobTitle: meta.title,
+  description: cv.summary,
+  email: cv.contact.email,
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: about.location.split(', ')[0],
+    addressRegion: about.location.split(', ')[1],
+    addressCountry: 'US',
+  },
+  sameAs: links.links
+    .filter((l) => l.icon !== 'terminal' && l.icon !== 'mail')
+    .map((l) => l.url),
+  knowsAbout: skillKeywords,
+  alumniOf: cv.education.map((edu) => ({
+    '@type': 'EducationalOrganization',
+    name: edu.institution,
+  })),
+  hasOccupation: {
+    '@type': 'Occupation',
+    name: meta.title,
+    skills: skillKeywords.join(', '),
+  },
+  worksFor:
+    cv.experience[0]?.company !== 'Independent'
+      ? { '@type': 'Organization', name: cv.experience[0]?.company }
+      : undefined,
+}
+
+// JSON-LD: WebSite
+const websiteLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: `${meta.name} — ${meta.title}`,
+  url: meta.siteUrl,
+  description: meta.oneLiner,
+  author: { '@type': 'Person', name: meta.name },
+}
+
+// JSON-LD: ProfilePage
+const profilePageLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfilePage',
+  name: title,
+  url: canonicalUrl,
+  description: description,
+  mainEntity: { '@type': 'Person', name: meta.name, url: meta.siteUrl },
+  dateModified: new Date().toISOString().split('T')[0],
+  inLanguage: 'en-US',
+}
+
+// JSON-LD: ItemList (projects)
+const projectListLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Projects',
+  numberOfItems: work.projects.length,
+  itemListElement: work.projects.map((p, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    item: {
+      '@type': 'SoftwareSourceCode',
+      name: p.title,
+      description: p.description,
+      url: p.url || p.repo || undefined,
+      codeRepository: p.repo || undefined,
+      programmingLanguage: p.tags,
+      author: { '@type': 'Person', name: meta.name },
+    },
+  })),
+}
+
+// JSON-LD: BreadcrumbList
+const breadcrumbLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: meta.siteUrl,
+    },
+  ],
+}
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Primary Meta -->
+    <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="robots" content="index, follow" />
+    <meta name="keywords" content={keywords} />
+    <meta name="author" content={meta.name} />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+    <meta name="googlebot" content="index, follow" />
     <link rel="canonical" href={canonicalUrl} />
+
+    <!-- Theme & Mobile -->
+    <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f5f2ed" media="(prefers-color-scheme: light)" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content={meta.name} />
+    <meta name="application-name" content={meta.name} />
+
+    <!-- Geographic -->
+    <meta name="geo.region" content="US-TN" />
+    <meta name="geo.placename" content="Nashville" />
 
     <!-- Font preloading -->
     <link
@@ -42,102 +172,226 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
     />
 
     <!-- Open Graph -->
+    <meta property="og:type" content="profile" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:site_name" content={meta.name} />
+    <meta property="og:locale" content="en_US" />
+    <meta property="profile:first_name" content={meta.name.split(' ')[0]} />
+    <meta property="profile:last_name" content={meta.name.split(' ').slice(1).join(' ')} />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
 
-    <title>{title}</title>
-    <ClientRouter />
+    <!-- IndieWeb rel-me links for identity verification -->
+    {links.links.filter((l) => l.icon !== 'terminal').map((l) => <link rel="me" href={l.url} />)}
+
+    <!-- JSON-LD Structured Data -->
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(personLd)} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteLd)} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(profilePageLd)} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(projectListLd)} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
+
+    <!-- Theme detection (before paint) -->
     <script is:inline>
       ;(function () {
         const theme =
           localStorage.getItem('theme') ||
-          (window.matchMedia('(prefers-color-scheme: light)').matches
-            ? 'light'
-            : 'dark')
+          (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
         document.documentElement.setAttribute('data-theme', theme)
       })()
     </script>
   </head>
   <body>
-    <a href="#main-content" class="skip-link">Skip to content</a>
+    <a href="#main-content" class="sr-only sr-only-focusable">Skip to content</a>
     <BootSequence />
     <main id="main-content">
       <slot />
     </main>
-    <CommandBar />
-    <HelpOverlay />
-    <KeyboardNav />
-    <script is:inline>
-      ;(function () {
-        const sectionOrder = { '/': 0, '/work': 1, '/work/': 1, '/cv': 2, '/cv/': 2, '/links': 3, '/links/': 3 }
-        let pendingDir = 'none'
 
-        function getIndex(path) {
-          if (path === '/' || path === '') return 0
-          const clean = path.replace(/\/$/, '')
-          return sectionOrder[clean] != null ? sectionOrder[clean] : -1
+    <!--
+      Semantic content for crawlers, screen readers, and no-JS fallback.
+      Visually hidden but fully accessible to search engines.
+    -->
+    <div class="sr-only" role="complementary" aria-label="Site content">
+      <header>
+        <h1>{meta.name}</h1>
+        <p>{meta.title} &mdash; {meta.oneLiner}</p>
+      </header>
+
+      <section aria-label="About">
+        <h2>About</h2>
+        <p>{about.bio}</p>
+        <p>Location: {about.location}</p>
+        <p>Status: {about.status}</p>
+        <h3>Interests</h3>
+        <ul>
+          {about.interests.map((interest: string) => <li>{interest}</li>)}
+        </ul>
+      </section>
+
+      <section aria-label="Professional Summary">
+        <h2>Professional Summary</h2>
+        <p>{cv.summary}</p>
+      </section>
+
+      <section aria-label="Experience">
+        <h2>Experience</h2>
+        {
+          cv.experience.map((job) => (
+            <article>
+              <h3>
+                {job.role} at {job.company}
+              </h3>
+              <p>
+                {job.start} &ndash; {job.end}
+              </p>
+              <ul>
+                {job.bullets.map((bullet) => (
+                  <li>{bullet}</li>
+                ))}
+              </ul>
+            </article>
+          ))
         }
+      </section>
 
-        document.addEventListener('astro:before-preparation', function (e) {
-          const fromIdx = getIndex(window.location.pathname)
-          const toIdx = getIndex(new URL(e.to, window.location.origin).pathname)
-          pendingDir = 'none'
-          if (fromIdx >= 0 && toIdx >= 0 && fromIdx !== toIdx) {
-            pendingDir = toIdx > fromIdx ? 'forward' : 'backward'
+      <section aria-label="Skills">
+        <h2>Skills</h2>
+        {
+          cv.skills.map((group) => (
+            <div>
+              <h3>{group.category}</h3>
+              <p>{group.items.join(', ')}</p>
+            </div>
+          ))
+        }
+      </section>
+
+      <section aria-label="Projects">
+        <h2>Projects</h2>
+        {
+          work.projects.map((project) => (
+            <article>
+              <h3>{project.title}</h3>
+              <p>{project.description}</p>
+              <p>Technologies: {project.tags.join(', ')}</p>
+              {project.url && <a href={project.url}>Visit project</a>}
+              {project.repo && <a href={project.repo}>Source code</a>}
+            </article>
+          ))
+        }
+      </section>
+
+      <section aria-label="Education">
+        <h2>Education</h2>
+        {
+          cv.education.map((edu) => (
+            <div>
+              <h3>{edu.degree}</h3>
+              <p>
+                {edu.institution}, {edu.year}
+              </p>
+            </div>
+          ))
+        }
+      </section>
+
+      <section aria-label="Contact">
+        <h2>Contact</h2>
+        <p>
+          Email: <a href={`mailto:${cv.contact.email}`}>{cv.contact.email}</a>
+        </p>
+        <p>
+          Website: <a href={cv.contact.website}>{cv.contact.website}</a>
+        </p>
+        <p>SSH: {meta.sshAddress}</p>
+        <nav aria-label="Social links">
+          <ul>
+            {links.links.map((link) => <li><a href={link.url}>{link.label}</a></li>)}
+          </ul>
+        </nav>
+      </section>
+    </div>
+
+    <noscript>
+      <div
+        style="padding:2rem;max-width:80ch;margin:0 auto;font-family:monospace;color:#c8c0b8;background:#0d0d0d;min-height:100vh;"
+      >
+        <h1 style="color:#e05a33;">{meta.name}</h1>
+        <p>{meta.title} &mdash; {meta.oneLiner}</p>
+        <hr style="border-color:#2a2826;" />
+        <p>{cv.summary}</p>
+        <p>
+          This site requires JavaScript for the interactive terminal experience. You can also access
+          this portfolio via SSH:
+        </p>
+        <pre style="color:#e05a33;">{meta.sshAddress}</pre>
+        <h2 style="color:#e05a33;">Contact</h2>
+        <ul>
+          <li>
+            Email: <a href={`mailto:${cv.contact.email}`} style="color:#e05a33;"
+              >{cv.contact.email}</a
+            >
+          </li>
+          <li>
+            Website: <a href={cv.contact.website} style="color:#e05a33;">{cv.contact.website}</a>
+          </li>
+          {
+            links.links.map((link) => (
+              <li>
+                <a href={link.url} style="color:#e05a33;">
+                  {link.label}
+                </a>
+              </li>
+            ))
           }
-        })
-
-        document.addEventListener('astro:after-swap', function () {
-          const main = document.getElementById('main-content')
-          if (!main || pendingDir === 'none') return
-          const anim = pendingDir === 'forward' ? 'slide-in-from-right' : 'slide-in-from-left'
-          main.style.animation = 'none'
-          // Force reflow to restart animation
-          void main.offsetHeight
-          main.style.animation = anim + ' 150ms cubic-bezier(0.4, 0, 0.2, 1) both'
-          main.addEventListener('animationend', function handler() {
-            main.style.animation = ''
-            main.removeEventListener('animationend', handler)
-          })
-          pendingDir = 'none'
-        })
-      })()
-    </script>
+        </ul>
+      </div>
+    </noscript>
   </body>
 </html>
 
 <style is:global>
-  /* Import design tokens, fonts, and typography */
+  /* Import design tokens and fonts */
   @import '../styles/fonts.css';
   @import '../styles/tokens.css';
-  @import '../styles/typography.css';
-  @import '../styles/animations.css';
-  @import '../styles/crt.css';
 
-  /* Skip-to-content link for keyboard users */
-  .skip-link {
+  /* Visually hidden but accessible to screen readers and crawlers */
+  .sr-only {
     position: absolute;
-    top: -100%;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Show on focus (for skip link) */
+  .sr-only-focusable:focus {
+    position: fixed;
+    top: 0;
     left: 0;
-    z-index: 1100;
+    z-index: 10000;
+    width: auto;
+    height: auto;
     padding: 0.5rem 1rem;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
     background: var(--accent);
     color: var(--bg);
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.85rem;
     text-decoration: none;
-  }
-
-  .skip-link:focus {
-    top: 0;
   }
 
   /* Minimal reset */
@@ -149,6 +403,12 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
     box-sizing: border-box;
   }
 
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
   html {
     font-size: 16px;
     -webkit-text-size-adjust: 100%;
@@ -158,19 +418,10 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
     font-family: 'JetBrains Mono', monospace;
     background-color: var(--bg);
     color: var(--fg);
-    line-height: 1.6;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-bottom: 2rem;
   }
 
   main {
     width: 100%;
-    max-width: 80ch;
-    padding: 2rem 1rem;
-    flex: 1;
+    height: 100%;
   }
-
 </style>
