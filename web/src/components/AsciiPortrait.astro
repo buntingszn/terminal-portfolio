@@ -32,6 +32,7 @@ const { staticAscii, cols } = portraitData
   interface PortraitInstance {
     handle: AnimHandle | null
     themeObs: MutationObserver
+    randomListeners: (() => void) | null
   }
 
   const instances = new Map<HTMLElement, PortraitInstance>()
@@ -46,7 +47,23 @@ const { staticAscii, cols } = portraitData
       .join('\n')
   }
 
+  function randomBgLuminance(): number | null {
+    if (sessionStorage.getItem('random-mode') !== '1') return null
+    const bg = sessionStorage.getItem('random-bg')
+    if (!bg) return null
+    const n = parseInt(bg.slice(1), 16)
+    const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+    const [rs, gs, bs] = [r, g, b].map((c) => {
+      c /= 255
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+    })
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs
+  }
+
   function isLightTheme(): boolean {
+    // In random mode, determine from bg luminance
+    const lum = randomBgLuminance()
+    if (lum !== null) return lum >= 0.179
     // Check localStorage first — it's set before data-theme during Astro transitions
     const stored = localStorage.getItem('theme')
     if (stored) return stored === 'light'
@@ -62,9 +79,11 @@ const { staticAscii, cols } = portraitData
     return { ...data, brightness, staticAscii: buildStaticAscii(brightness, data.ramp) }
   }
 
-  function syncStaticText(pre: HTMLPreElement, data: { brightness: number[][]; ramp: string }) {
+  function syncStaticText(pre: HTMLPreElement, data: { brightness: number[][]; ramp: string; staticAscii: string }) {
     if (isLightTheme()) {
       pre.textContent = buildStaticAscii(invertBrightness(data.brightness), data.ramp)
+    } else {
+      pre.textContent = data.staticAscii
     }
   }
 
@@ -91,7 +110,12 @@ const { staticAscii, cols } = portraitData
         attributes: true,
         attributeFilter: ['data-theme'],
       })
-      const inst: PortraitInstance = { handle: null, themeObs }
+      const onRandom = () => syncStaticText(pre, data)
+      document.addEventListener('random-theme-changed', onRandom)
+      const removeRandomListeners = () => {
+        document.removeEventListener('random-theme-changed', onRandom)
+      }
+      const inst: PortraitInstance = { handle: null, themeObs, randomListeners: removeRandomListeners }
       instances.set(wrap, inst)
       return
     }
@@ -108,17 +132,24 @@ const { staticAscii, cols } = portraitData
 
     let handle = startAnimation()
 
-    const themeObs = new MutationObserver(() => {
+    function restartAnim() {
       handle.destroy()
       handle = startAnimation()
       inst.handle = handle
-    })
+    }
+
+    const themeObs = new MutationObserver(restartAnim)
     themeObs.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['data-theme'],
     })
 
-    const inst: PortraitInstance = { handle, themeObs }
+    document.addEventListener('random-theme-changed', restartAnim)
+    const removeRandomListeners = () => {
+      document.removeEventListener('random-theme-changed', restartAnim)
+    }
+
+    const inst: PortraitInstance = { handle, themeObs, randomListeners: removeRandomListeners }
     instances.set(wrap, inst)
   }
 
@@ -127,6 +158,7 @@ const { staticAscii, cols } = portraitData
     if (!inst) return
     inst.handle?.destroy()
     inst.themeObs.disconnect()
+    inst.randomListeners?.()
     instances.delete(wrap)
   }
 

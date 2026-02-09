@@ -101,7 +101,15 @@
 
     if (trimmed.startsWith('theme ')) {
       const theme = trimmed.split(' ')[1]
+      if (theme === 'random') {
+        closeBar()
+        document.dispatchEvent(new CustomEvent('activate-random'))
+        return
+      }
       if (theme === 'light' || theme === 'dark') {
+        if (sessionStorage.getItem('random-mode') === '1') {
+          document.dispatchEvent(new CustomEvent('exit-random'))
+        }
         document.documentElement.setAttribute('data-theme', theme)
         localStorage.setItem('theme', theme)
         const icon = document.querySelector('#theme-toggle .theme-icon')

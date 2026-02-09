@@ -1,9 +1,104 @@
 ---
 // Global keyboard navigation handler
-// j/k: scroll, 1-4: page nav, t: theme toggle, ?: help, :: command bar
+// j/k: scroll, 1-4: page nav, t: theme toggle, r: random color, ?: help, :: command bar
 ---
 
 <script>
+  const RANDOM_PALETTE = [
+    '#8141e6', // violet
+    '#e52535', // red
+    '#e87d1e', // orange
+    '#eab308', // gold
+    '#16a34a', // green
+    '#0891b2', // teal
+    '#2563eb', // blue
+    '#c026d3', // magenta
+    '#db2777', // pink
+    '#65a30d', // lime
+  ]
+
+  function generateRandomColor(): string {
+    return RANDOM_PALETTE[Math.floor(Math.random() * RANDOM_PALETTE.length)]
+  }
+
+  function hexToRgb(hex: string): [number, number, number] {
+    const n = parseInt(hex.slice(1), 16)
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+  }
+
+  function relativeLuminance(r: number, g: number, b: number): number {
+    const [rs, gs, bs] = [r, g, b].map((c) => {
+      c /= 255
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+    })
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs
+  }
+
+  function clamp(v: number): number {
+    return Math.max(0, Math.min(255, v))
+  }
+
+  function deriveTokens(bgHex: string): Record<string, string> {
+    const [r, g, b] = hexToRgb(bgHex)
+    const lum = relativeLuminance(r, g, b)
+    const isDark = lum < 0.179
+    const fg = isDark ? '#ffffff' : '#000000'
+    const shift = isDark ? 25 : -25
+    const br = clamp(r + shift)
+    const bg2 = clamp(g + shift)
+    const bb = clamp(b + shift)
+    const border = '#' + [br, bg2, bb].map((c) => c.toString(16).padStart(2, '0')).join('')
+    return {
+      '--bg': bgHex,
+      '--fg': fg,
+      '--accent': fg,
+      '--accent-glow': fg,
+      '--muted': fg,
+      '--border': border,
+    }
+  }
+
+  function applyRandomTokens(tokens: Record<string, string>) {
+    const el = document.documentElement
+    for (const [key, value] of Object.entries(tokens)) {
+      el.style.setProperty(key, value)
+    }
+  }
+
+  function clearRandomTokens() {
+    const el = document.documentElement
+    const props = ['--bg', '--fg', '--accent', '--accent-glow', '--muted', '--border']
+    for (const prop of props) {
+      el.style.removeProperty(prop)
+    }
+  }
+
+  function activateRandomMode() {
+    const bgHex = generateRandomColor()
+    const tokens = deriveTokens(bgHex)
+    applyRandomTokens(tokens)
+    sessionStorage.setItem('random-mode', '1')
+    sessionStorage.setItem('random-bg', bgHex)
+    const icon = document.querySelector('#theme-toggle .theme-icon')
+    if (icon) icon.textContent = '[ random ]'
+    document.dispatchEvent(new CustomEvent('random-theme-changed'))
+  }
+
+  function exitRandomMode() {
+    clearRandomTokens()
+    sessionStorage.removeItem('random-mode')
+    sessionStorage.removeItem('random-bg')
+    const theme = localStorage.getItem('theme') ||
+      (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+    document.documentElement.setAttribute('data-theme', theme)
+    const icon = document.querySelector('#theme-toggle .theme-icon')
+    if (icon) icon.textContent = theme === 'dark' ? '[ light ]' : '[ dark ]'
+    document.dispatchEvent(new CustomEvent('random-theme-changed'))
+  }
+
+  document.addEventListener('activate-random', activateRandomMode)
+  document.addEventListener('exit-random', exitRandomMode)
+
   function handleKeyboard(e: KeyboardEvent) {
     const target = e.target as HTMLElement
     if (
@@ -37,7 +132,14 @@
       case '4':
         window.location.href = '/links'
         break
+      case 'r':
+        activateRandomMode()
+        break
       case 't': {
+        if (sessionStorage.getItem('random-mode') === '1') {
+          exitRandomMode()
+          break
+        }
         const current = document.documentElement.getAttribute('data-theme')
         const next = current === 'dark' ? 'light' : 'dark'
         document.documentElement.setAttribute('data-theme', next)
