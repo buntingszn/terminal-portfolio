@@ -2,8 +2,6 @@
 import Base from '@layouts/Base.astro'
 import Nav from '@components/Nav.astro'
 import StatusBar from '@components/StatusBar.astro'
-import GradientHeading from '@components/GradientHeading.astro'
-import AsciiDivider from '@components/AsciiDivider.astro'
 import { getMeta, getCv } from '../lib/data'
 
 const meta = getMeta()
@@ -14,30 +12,26 @@ const cv = getCv()
   <Nav current="cv" />
 
   <div class="page-content">
-  <section class="neofetch" aria-label="Profile overview">
-    <div class="info">
-      <GradientHeading tag="h2" text={meta.name} class="neofetch-header" />
-      <p class="contact-line">
+  <section class="cv" aria-label="CV">
+    <div class="header">
+      <span class="name">{meta.name}</span>
+      <p class="contact">
         {cv.contact.email} &middot; {cv.contact.location} &middot; <a href={cv.contact.website}>{cv.contact.website}</a>
       </p>
-      <p class="separator" aria-hidden="true">──────────────────</p>
-      <p>{cv.summary}</p>
+      <p class="summary">{cv.summary}</p>
     </div>
-  </section>
 
-  <AsciiDivider title="experience" />
+    <div class="divider" role="separator"><span>experience</span></div>
 
-  <section class="experience" aria-label="Work experience">
     {
       cv.experience.map((job) => (
-        <div class="experience-entry">
-          <div class="experience-header">
-            <h3>
-              {job.role} <span class="muted">@ {job.company}</span>
-            </h3>
-            <span class="dates">
-              {job.start} &ndash; {job.end}
+        <div class="entry">
+          <div class="entry-header">
+            <span>
+              <span class="key">{job.role}</span>
+              <span class="muted"> @ {job.company}</span>
             </span>
+            <span class="muted">{job.start} &ndash; {job.end}</span>
           </div>
           <ul>
             {job.bullets.map((bullet) => (
@@ -47,26 +41,22 @@ const cv = getCv()
         </div>
       ))
     }
-  </section>
 
-  <AsciiDivider title="skills" />
+    <div class="divider" role="separator"><span>skills</span></div>
 
-  <section class="skills" aria-label="Skills">
     {
       cv.skills.map((group) => (
-        <div class="skills-group">
+        <p class="skill-line">
           <span class="key">{group.category}</span>: {group.items.join(', ')}
-        </div>
+        </p>
       ))
     }
-  </section>
 
-  <AsciiDivider title="education" />
+    <div class="divider" role="separator"><span>education</span></div>
 
-  <section class="education" aria-label="Education">
     {
       cv.education.map((edu) => (
-        <div class="education-entry">
+        <div class="edu-entry">
           <p>
             <span class="key">{edu.degree}</span>
             <span class="muted"> @ {edu.institution}</span>
@@ -82,48 +72,62 @@ const cv = getCv()
 </Base>
 
 <style>
-  /* Neofetch layout */
-  .neofetch {
-    display: flex;
-    gap: 2rem;
-    align-items: flex-start;
+  .cv {
+    font-size: inherit;
+  }
+
+  .header {
     margin-bottom: 1rem;
   }
 
-  .info {
-    flex: 1;
-    min-width: 0;
+  .name {
+    font-weight: 700;
+    color: var(--accent);
   }
 
-  .info :global(.neofetch-header) {
-    margin-bottom: 0.25rem;
-  }
-
-  .contact-line {
+  .contact {
     color: var(--muted);
     margin-bottom: 0.5rem;
-    word-break: break-word;
   }
 
-  .contact-line a {
+  .contact a {
     color: var(--muted);
     text-decoration: none;
     transition: color 0.2s ease;
   }
 
-  .contact-line a:hover {
+  .contact a:hover {
     color: var(--accent);
   }
 
-  .info p {
-    margin-bottom: 0.25rem;
-    line-height: 1.5;
-    word-break: break-word;
+  .summary {
+    margin-bottom: 0;
+    line-height: 1.6;
   }
 
-  .separator {
+  /* Section dividers */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     color: var(--border);
+    margin: 1.25rem 0;
     user-select: none;
+  }
+
+  .divider::before,
+  .divider::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid var(--border);
+  }
+
+  .divider span {
+    color: var(--accent);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
   }
 
   /* Key-value styling */
@@ -132,79 +136,65 @@ const cv = getCv()
     font-weight: 700;
   }
 
-  /* Experience section */
-  .experience-entry {
-    margin-bottom: 1.5rem;
+  /* Experience entries */
+  .entry {
+    margin-bottom: 1.25rem;
   }
 
-  .experience-entry:last-child {
+  .entry:last-of-type {
     margin-bottom: 0;
   }
 
-  .experience-header {
+  .entry-header {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     flex-wrap: wrap;
     gap: 0.5rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
   }
 
-  .experience-header h3 {
-    margin-bottom: 0;
-  }
-
-  .dates {
-    color: var(--muted);
-    white-space: nowrap;
-  }
-
-  .experience-entry ul {
+  .entry ul {
     list-style: none;
     padding-left: 1.5rem;
     margin-bottom: 0;
   }
 
-  .experience-entry li::before {
+  .entry li::before {
     content: '- ';
   }
 
-  .experience-entry li {
+  .entry li {
     color: var(--fg);
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.15rem;
   }
 
-  /* Skills section */
-  .skills-group {
-    margin-bottom: 0.5rem;
+  /* Skills */
+  .skill-line {
+    margin-bottom: 0.35rem;
     line-height: 1.6;
   }
 
-  .skills-group:last-child {
+  .skill-line:last-of-type {
     margin-bottom: 0;
   }
 
-  /* Education section */
-  .education-entry {
-    margin-bottom: 0.75rem;
+  /* Education */
+  .edu-entry {
+    margin-bottom: 0.5rem;
   }
 
-  .education-entry:last-child {
+  .edu-entry:last-of-type {
     margin-bottom: 0;
   }
 
-  .education-entry p {
-    margin-bottom: 0.1rem;
+  .edu-entry p {
+    margin-bottom: 0;
   }
 
-  /* Responsive: stack on mobile */
+  /* Responsive */
   @media (max-width: 640px) {
-    .neofetch {
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .experience-header {
+    .entry-header {
       flex-direction: column;
       gap: 0.15rem;
     }

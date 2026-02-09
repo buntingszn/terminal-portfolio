@@ -141,10 +141,21 @@ const sorted = [...projects].sort((a, b) => Number(b.featured) - Number(a.featur
     width: 150px;
     z-index: 999;
     pointer-events: none;
-    transition: bottom 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    visibility: hidden;
+    opacity: 0;
+    transition:
+      bottom 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
+      visibility 0s linear 0.8s,
+      opacity 0s linear 0.8s;
   }
 
   .ralph-egg.visible {
     bottom: 0;
+    visibility: visible;
+    opacity: 1;
+    transition:
+      bottom 0.8s cubic-bezier(0.34, 1.56, 0.64, 1),
+      visibility 0s linear 0s,
+      opacity 0s linear 0s;
   }
 </style>

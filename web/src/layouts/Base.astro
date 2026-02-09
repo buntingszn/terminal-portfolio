@@ -17,6 +17,24 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
 ---
 
 <!doctype html>
+<!--
+ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ ██                                                                   ██
+ ██   ██╗  ██╗██████╗ ███╗   ███╗   ███████╗██╗   ██╗██╗             ██
+ ██   ██║ ██╔╝██╔══██╗████╗ ████║   ██╔════╝╚██╗ ██╔╝██║             ██
+ ██   █████╔╝ ██████╔╝██╔████╔██║   █████╗   ╚████╔╝ ██║             ██
+ ██   ██╔═██╗ ██╔═══╝ ██║╚██╔╝██║   ██╔══╝    ╚██╔╝  ██║             ██
+ ██   ██║  ██╗██║     ██║ ╚═╝ ██║██╗██║        ██║   ██║             ██
+ ██   ╚═╝  ╚═╝╚═╝     ╚═╝     ╚═╝╚═╝╚═╝        ╚═╝   ╚═╝             ██
+ ██                                                                   ██
+ ██   cracked by: nobody, it's open source                            ██
+ ██   release: v1.0 · nashville, tn · 2026                           ██
+ ██   greets: claude, kimi, qwen, all the homies                      ██
+ ██                                                                   ██
+ ██   "if you're reading this, you're the right kind of curious"      ██
+ ██                                                                   ██
+ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+-->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -150,6 +168,31 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
           clearInterval(interval)
           interval = null
         })
+        function forwardScroll() {
+          const pc = document.querySelector('.page-content')
+          if (!pc) return
+          if (!pc.querySelector('.scroll-fade')) {
+            const fade = document.createElement('div')
+            fade.className = 'scroll-fade'
+            pc.appendChild(fade)
+          }
+          function checkBottom() {
+            const atBottom = pc.scrollHeight - pc.scrollTop - pc.clientHeight < 2
+            const noScroll = pc.scrollHeight <= pc.clientHeight
+            if (atBottom || noScroll) {
+              pc.classList.add('scrolled-bottom')
+            } else {
+              pc.classList.remove('scrolled-bottom')
+            }
+          }
+          checkBottom()
+          pc.addEventListener('scroll', checkBottom, { passive: true })
+          document.addEventListener('wheel', function (ev) {
+            pc.scrollTop += ev.deltaY
+          }, { passive: true })
+        }
+        forwardScroll()
+        document.addEventListener('astro:after-swap', forwardScroll)
       })()
     </script>
   </body>
@@ -160,7 +203,6 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
   @import '../styles/tokens.css';
   @import '../styles/typography.css';
   @import '../styles/animations.css';
-  @import '../styles/crt.css';
 
   .skip-link {
     position: absolute;
@@ -215,6 +257,28 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
     overflow: hidden;
   }
 
+  .page-content {
+    position: relative;
+  }
+
+  .page-content .scroll-fade {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 5rem;
+    margin-top: -5rem;
+    background: linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--bg), transparent 60%) 40%, var(--bg) 100%);
+    pointer-events: none;
+    z-index: 10;
+    flex-shrink: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .page-content.scrolled-bottom .scroll-fade {
+    opacity: 0;
+  }
+
   @media (min-width: 768px) {
     main {
       max-height: 75vh;
@@ -227,8 +291,7 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
     min-height: 0;
     display: flex;
     flex-direction: column;
-    scrollbar-width: thin;
-    scrollbar-color: var(--muted) transparent;
+    scrollbar-width: none;
   }
 
   .page-content::before,
