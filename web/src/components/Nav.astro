@@ -57,12 +57,8 @@ const links = [
   a.active {
     color: var(--accent);
     font-weight: 700;
-    animation: tab-glow-pulse 600ms ease-in-out 1;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    a.active {
-      animation: none;
-    }
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--accent);
   }
 </style>

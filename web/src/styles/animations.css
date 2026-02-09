@@ -30,17 +30,6 @@
 }
 
 /* Tab glow pulse — fires once on page load for active tab */
-@keyframes tab-glow-pulse {
-  0% {
-    color: var(--accent-glow);
-    text-shadow: 0 0 6px var(--accent-glow);
-  }
-  100% {
-    color: var(--accent);
-    text-shadow: none;
-  }
-}
-
 /* Cursor blink — 1.06s period (530ms half) to match TUI */
 @keyframes cursor-blink {
   0%,

@@ -7,16 +7,6 @@ import { getMeta, getLinks } from '../lib/data'
 const meta = getMeta()
 const { links } = getLinks()
 
-const iconMap: Record<string, string> = {
-  github: 'gh',
-  mail: '@',
-  linkedin: 'in',
-  terminal: '>_',
-}
-
-function getIcon(icon: string): string {
-  return iconMap[icon] ?? '>'
-}
 ---
 
 <Base
@@ -35,7 +25,6 @@ function getIcon(icon: string): string {
               <span class="hover-prefix" aria-hidden="true">
                 &gt;
               </span>
-              <span class="icon">{getIcon(link.icon)}</span>
               <span class="link-content">
                 <span class="label">{link.label}</span>
                 <span class="url">{link.text || link.url}</span>
@@ -94,14 +83,6 @@ function getIcon(icon: string): string {
     opacity: 1;
   }
 
-  .icon {
-    color: var(--accent);
-    width: 2ch;
-    flex-shrink: 0;
-    text-align: center;
-    font-weight: 700;
-  }
-
   .link-content {
     display: flex;
     flex-direction: column;
@@ -118,9 +99,19 @@ function getIcon(icon: string): string {
   }
 
   .url {
+    display: inline-block;
     color: var(--muted);
+    background-color: transparent;
+    padding: 1px 4px;
+    border-radius: 2px;
+    margin-top: 0.15rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    transition: background-color 0.2s ease;
+  }
+
+  .link-list a:hover .url {
+    background-color: var(--border);
   }
 </style>

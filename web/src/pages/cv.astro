@@ -21,29 +21,35 @@ const cv = getCv()
       <p class="summary">{cv.summary}</p>
     </div>
 
-    <div class="divider" role="separator"><span>experience</span></div>
+    <div class="divider" role="separator"><span>&nbsp; experience &nbsp;</span></div>
 
     {
       cv.experience.map((job) => (
         <div class="entry">
           <div class="entry-header">
             <span>
-              <span class="key">{job.role}</span>
+              <span class="role">{job.role}</span>
               <span class="muted"> @ {job.company}</span>
             </span>
-            <span class="muted">{job.start} &ndash; {job.end}</span>
+            <span class="date">{job.start} &ndash; {job.end}</span>
           </div>
           <ul>
             {job.bullets.map((bullet) => (
-              <li>{bullet}</li>
+              <li set:html={
+                bullet.replace(
+                  /\b(TypeScript|React|Next\.js|Hono|Astro|Go|Shell|Ruby on Rails|Elixir|ComfyUI|Flux|LoRA|CI\/CD|CMS|CMMS|RAG|LLM|SSH|AI)\b/g,
+                  '<code>$1</code>'
+                )
+              } />
             ))}
           </ul>
         </div>
       ))
     }
 
-    <div class="divider" role="separator"><span>skills</span></div>
+    <div class="divider" role="separator"><span>&nbsp; skills &nbsp;</span></div>
 
+    <div class="skills-grid">
     {
       cv.skills.map((group) => (
         <p class="skill-line">
@@ -51,14 +57,15 @@ const cv = getCv()
         </p>
       ))
     }
+    </div>
 
-    <div class="divider" role="separator"><span>education</span></div>
+    <div class="divider" role="separator"><span>&nbsp; education &nbsp;</span></div>
 
     {
       cv.education.map((edu) => (
         <div class="edu-entry">
           <p>
-            <span class="key">{edu.degree}</span>
+            <span class="role">{edu.degree}</span>
             <span class="muted"> @ {edu.institution}</span>
           </p>
           <p class="muted">{edu.year}</p>
@@ -105,35 +112,36 @@ const cv = getCv()
     line-height: 1.6;
   }
 
-  /* Section dividers */
+  /* Section dividers — reverse video */
   .divider {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--border);
     margin: 1.25rem 0;
     user-select: none;
   }
 
-  .divider::before,
-  .divider::after {
-    content: '';
-    flex: 1;
-    border-top: 1px solid var(--border);
-  }
-
   .divider span {
-    color: var(--accent);
+    display: inline-block;
+    background: var(--accent);
+    color: var(--bg);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     white-space: nowrap;
+    padding: 1px 0;
   }
 
   /* Key-value styling */
   .key {
     color: var(--accent);
     font-weight: 700;
+  }
+
+  /* Role / degree titles — underline */
+  .role {
+    color: var(--accent);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--accent);
   }
 
   /* Experience entries */
@@ -154,10 +162,13 @@ const cv = getCv()
     margin-bottom: 0.25rem;
   }
 
+  /* Left border indent for bullet lists */
   .entry ul {
     list-style: none;
-    padding-left: 1.5rem;
+    padding-left: 1rem;
     margin-bottom: 0;
+    margin-left: 0.5rem;
+    border-left: 2px solid var(--border);
   }
 
   .entry li::before {
@@ -169,7 +180,32 @@ const cv = getCv()
     margin-bottom: 0.15rem;
   }
 
-  /* Skills */
+  /* Inline code tags — hover reveal */
+  .entry li :global(code) {
+    background-color: transparent;
+    padding: 1px 4px;
+    border-radius: 2px;
+    font-size: inherit;
+    transition: background-color 0.2s ease;
+  }
+
+  .entry:hover li :global(code) {
+    background-color: var(--border);
+  }
+
+  /* Accent dates — right-aligned */
+  .date {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* Skills — two-column grid */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.25rem 2rem;
+  }
+
   .skill-line {
     margin-bottom: 0.35rem;
     line-height: 1.6;
@@ -197,6 +233,10 @@ const cv = getCv()
     .entry-header {
       flex-direction: column;
       gap: 0.15rem;
+    }
+
+    .skills-grid {
+      grid-template-columns: 1fr;
     }
   }
 </style>
