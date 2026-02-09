@@ -24,7 +24,7 @@ type About struct {
 	Location  string      `json:"location"`
 	Status    string      `json:"status"`
 	Education []Education `json:"education"`
-	Interests []string    `json:"interests"`
+	Interests []string    `json:"interests,omitempty"`
 }
 
 // WorkProject represents a single project entry.
