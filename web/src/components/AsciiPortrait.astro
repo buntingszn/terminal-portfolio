@@ -1,0 +1,179 @@
+---
+interface Props {
+  portraitData: {
+    cols: number
+    rows: number
+    brightness: number[][]
+    chars: string[][]
+    staticAscii: string
+    ramp: string
+  }
+  label?: string
+  class?: string
+}
+
+const { portraitData, label = 'ASCII art portrait', class: className } = Astro.props
+const { staticAscii, cols } = portraitData
+---
+
+<div class:list={['ascii-portrait', className]} role="img" aria-label={label}>
+  <pre
+    class="ascii-portrait__pre"
+    data-portrait={JSON.stringify(portraitData)}
+    style={`width: ${cols}ch;`}
+  >{staticAscii}</pre>
+</div>
+
+<script>
+  interface AnimHandle {
+    destroy: () => void
+  }
+
+  interface PortraitInstance {
+    handle: AnimHandle | null
+    themeObs: MutationObserver
+  }
+
+  const instances = new Map<HTMLElement, PortraitInstance>()
+
+  function invertBrightness(brightness: number[][]): number[][] {
+    return brightness.map((row) => row.map((b) => Math.round((1 - b) * 100) / 100))
+  }
+
+  function buildStaticAscii(brightness: number[][], ramp: string): string {
+    return brightness
+      .map((row) => row.map((b) => ramp[Math.round(b * (ramp.length - 1))]).join(''))
+      .join('\n')
+  }
+
+  function isLightTheme(): boolean {
+    // Check localStorage first — it's set before data-theme during Astro transitions
+    const stored = localStorage.getItem('theme')
+    if (stored) return stored === 'light'
+    return (
+      document.documentElement.dataset.theme === 'light' ||
+      window.matchMedia('(prefers-color-scheme: light)').matches
+    )
+  }
+
+  function getThemedData(data: { brightness: number[][]; ramp: string; staticAscii: string }) {
+    if (!isLightTheme()) return data
+    const brightness = invertBrightness(data.brightness)
+    return { ...data, brightness, staticAscii: buildStaticAscii(brightness, data.ramp) }
+  }
+
+  function syncStaticText(pre: HTMLPreElement, data: { brightness: number[][]; ramp: string }) {
+    if (isLightTheme()) {
+      pre.textContent = buildStaticAscii(invertBrightness(data.brightness), data.ramp)
+    }
+  }
+
+  async function initPortrait(wrap: HTMLElement) {
+    if (instances.has(wrap)) return
+
+    const pre = wrap.querySelector<HTMLPreElement>('.ascii-portrait__pre')
+    if (!pre) return
+
+    const dataAttr = pre.getAttribute('data-portrait')
+    if (!dataAttr) return
+
+    const data = JSON.parse(dataAttr)
+
+    // Immediately sync pre text to current theme (before async import)
+    syncStaticText(pre, data)
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    // For reduced-motion: still observe theme changes for static text, but no animation
+    if (reducedMotion) {
+      const themeObs = new MutationObserver(() => syncStaticText(pre, data))
+      themeObs.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme'],
+      })
+      const inst: PortraitInstance = { handle: null, themeObs }
+      instances.set(wrap, inst)
+      return
+    }
+
+    const { initAnimation } = await import('../scripts/ascii-portrait.js')
+
+    function startAnimation(): AnimHandle {
+      const animData = getThemedData(data)
+      return initAnimation(pre!, animData, {
+        mode: 'glitch',
+        speedMultiplier: 0.2,
+      })
+    }
+
+    let handle = startAnimation()
+
+    const themeObs = new MutationObserver(() => {
+      handle.destroy()
+      handle = startAnimation()
+      inst.handle = handle
+    })
+    themeObs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    })
+
+    const inst: PortraitInstance = { handle, themeObs }
+    instances.set(wrap, inst)
+  }
+
+  function destroyPortrait(wrap: HTMLElement) {
+    const inst = instances.get(wrap)
+    if (!inst) return
+    inst.handle?.destroy()
+    inst.themeObs.disconnect()
+    instances.delete(wrap)
+  }
+
+  function initAll() {
+    document.querySelectorAll<HTMLElement>('.ascii-portrait').forEach((wrap) => {
+      initPortrait(wrap)
+    })
+  }
+
+  function destroyAll() {
+    instances.forEach((_, wrap) => destroyPortrait(wrap))
+  }
+
+  // Astro page lifecycle
+  document.addEventListener('astro:page-load', initAll)
+  document.addEventListener('astro:before-swap', destroyAll)
+</script>
+
+<style>
+  .ascii-portrait {
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .ascii-portrait__pre {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--fg);
+    background: transparent;
+    line-height: 1.2;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    white-space: pre;
+    user-select: none;
+    border-radius: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ascii-portrait__pre {
+      visibility: visible !important;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .ascii-portrait {
+      display: none;
+    }
+  }
+</style>

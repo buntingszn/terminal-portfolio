@@ -4,9 +4,7 @@ import Nav from '@components/Nav.astro'
 import StatusBar from '@components/StatusBar.astro'
 import GradientHeading from '@components/GradientHeading.astro'
 import AsciiDivider from '@components/AsciiDivider.astro'
-import PortraitShimmer from '@components/PortraitShimmer.astro'
 import { getMeta, getCv } from '../lib/data'
-import portrait from '@data/assets/portrait.ascii.txt?raw'
 
 const meta = getMeta()
 const cv = getCv()
@@ -19,7 +17,6 @@ const domain = new URL(cv.contact.website).hostname
   <Nav current="cv" />
 
   <section class="neofetch" aria-label="Profile overview">
-    <PortraitShimmer portrait={portrait} class="cv-portrait" />
     <div class="info">
       <GradientHeading tag="h2" text={`${nameSlug}@${domain}`} class="neofetch-header" />
       <p class="contact-line">
@@ -92,10 +89,6 @@ const domain = new URL(cv.contact.website).hostname
     gap: 2rem;
     align-items: flex-start;
     margin-bottom: 1rem;
-  }
-
-  .cv-portrait {
-    line-height: 1.2;
   }
 
   .info {

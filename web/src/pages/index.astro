@@ -4,14 +4,13 @@ import Nav from '@components/Nav.astro'
 import StatusBar from '@components/StatusBar.astro'
 import GradientHeading from '@components/GradientHeading.astro'
 import AsciiDivider from '@components/AsciiDivider.astro'
-import PortraitShimmer from '@components/PortraitShimmer.astro'
+import AsciiPortrait from '@components/AsciiPortrait.astro'
 import { getMeta, getAbout } from '../lib/data'
 
 const meta = getMeta()
 const about = getAbout()
 
-// Load ASCII portrait as raw text
-import portraitRaw from '@data/assets/portrait.ascii.txt?raw'
+import portraitData from '@data/assets/portrait.json'
 ---
 
 <Base title={meta.name} description={meta.oneLiner}>
@@ -27,7 +26,7 @@ import portraitRaw from '@data/assets/portrait.ascii.txt?raw'
 
   <section class="about" aria-label="About">
     <div class="about-content">
-      <PortraitShimmer portrait={portraitRaw} class="home-portrait" />
+      <AsciiPortrait portraitData={portraitData} class="home-portrait" />
 
       <div class="about-text">
         <h2>About</h2>
@@ -121,6 +120,10 @@ import portraitRaw from '@data/assets/portrait.ascii.txt?raw'
 
   .interests li {
     color: var(--fg);
+  }
+
+  .about-content :global(.home-portrait) {
+    font-size: 0.35rem;
   }
 
   @media (max-width: 640px) {
