@@ -2,8 +2,6 @@
 import Base from '@layouts/Base.astro'
 import Nav from '@components/Nav.astro'
 import StatusBar from '@components/StatusBar.astro'
-import GradientHeading from '@components/GradientHeading.astro'
-import AsciiDivider from '@components/AsciiDivider.astro'
 import AsciiPortrait from '@components/AsciiPortrait.astro'
 import { getMeta, getAbout } from '../lib/data'
 
@@ -16,88 +14,103 @@ import portraitData from '@data/assets/portrait.json'
 <Base title={meta.name} description={meta.oneLiner}>
   <Nav current="home" />
 
-  <section class="hero" aria-label="Introduction">
-    <GradientHeading text={meta.name} />
-    <p class="title">{meta.title}</p>
-    <p class="muted">{meta.oneLiner}</p>
-  </section>
+  <div class="page-content">
+    <section class="about" aria-label="About">
+      <div class="about-content">
+        <AsciiPortrait portraitData={portraitData} class="home-portrait" />
 
-  <AsciiDivider />
+        <div class="about-text" data-stream>
+          <p>{about.bio}</p>
 
-  <section class="about" aria-label="About">
-    <div class="about-content">
-      <AsciiPortrait portraitData={portraitData} class="home-portrait" />
-
-      <div class="about-text">
-        <h2>About</h2>
-        <p>{about.bio}</p>
-
-        <div class="details">
-          <p><span class="label">Location:</span> {about.location}</p>
-          <p><span class="label">Status:</span> {about.status}</p>
+          <div class="details">
+            <p><span class="label">Location:</span> {about.location}</p>
+            <p><span class="label">Status:</span> {about.status}</p>
+          </div>
         </div>
-
-        <div class="interests">
-          <span class="label">Interests:</span>
-          <ul>
-            {about.interests.map((interest: string) => <li>{interest}</li>)}
-          </ul>
-        </div>
-
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 
-  <StatusBar
-    left="~/home"
-    center="j/k scroll · 1-4 nav · ? help"
-    right="HOME"
-  />
+  <StatusBar center="j/k scroll · 1-4 nav · ? help" />
 </Base>
 
+<script>
+  function streamText(container: HTMLElement) {
+    const nodes: { node: Text; text: string }[] = []
+
+    function collectTextNodes(el: Node) {
+      for (const child of Array.from(el.childNodes)) {
+        if (child.nodeType === Node.TEXT_NODE && child.textContent?.trim()) {
+          nodes.push({ node: child as Text, text: child.textContent! })
+          ;(child as Text).textContent = ''
+        } else if (child.nodeType === Node.ELEMENT_NODE) {
+          collectTextNodes(child)
+        }
+      }
+    }
+
+    collectTextNodes(container)
+    container.style.visibility = 'visible'
+
+    const cursor = document.createElement('span')
+    cursor.className = 'stream-cursor'
+    cursor.textContent = '\u2588'
+
+    let nodeIdx = 0
+    let charIdx = 0
+    const charDelay = 18
+
+    function tick() {
+      if (nodeIdx >= nodes.length) {
+        cursor.remove()
+        return
+      }
+
+      const { node, text } = nodes[nodeIdx]
+      node.textContent = text.slice(0, charIdx + 1)
+
+      cursor.remove()
+      node.parentNode?.insertBefore(cursor, node.nextSibling)
+
+      charIdx++
+      if (charIdx >= text.length) {
+        nodeIdx++
+        charIdx = 0
+      }
+
+      setTimeout(tick, charDelay)
+    }
+
+    tick()
+  }
+
+  function init() {
+    const el = document.querySelector<HTMLElement>('[data-stream]')
+    if (el) {
+      el.style.visibility = 'hidden'
+      streamText(el)
+    }
+  }
+
+  init()
+  document.addEventListener('astro:after-swap', init)
+</script>
+
 <style>
-  .hero {
-    text-align: center;
-    padding: 2rem 0 1rem;
-  }
-
-  .hero :global(.gradient-heading) {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .hero .title {
-    color: var(--fg);
-    font-size: 1.1rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .hero .muted {
-    color: var(--muted);
-    font-size: 0.95rem;
-  }
-
   .about {
-    padding: 0.5rem 0 2rem;
-  }
-
-  .about h2 {
-    margin-bottom: 1rem;
+    padding: 5rem 0;
   }
 
   .about-content {
     display: flex;
     gap: 2rem;
-    align-items: flex-start;
+    align-items: center;
+    font-size: 1.05rem;
   }
 
   .about-text {
     flex: 1;
     min-width: 0;
-  }
-
-  .details {
-    margin-bottom: 1rem;
   }
 
   .details p {
@@ -109,17 +122,13 @@ import portraitData from '@data/assets/portrait.json'
     font-weight: 700;
   }
 
-  .interests {
-    margin-bottom: 1rem;
+  .about-text :global(.stream-cursor) {
+    color: var(--accent);
+    animation: blink 600ms step-end infinite;
   }
 
-  .interests ul {
-    margin-top: 0.25rem;
-    padding-left: 1.5rem;
-  }
-
-  .interests li {
-    color: var(--fg);
+  @keyframes blink {
+    50% { opacity: 0; }
   }
 
   .about-content :global(.home-portrait) {
@@ -132,3 +141,4 @@ import portraitData from '@data/assets/portrait.json'
     }
   }
 </style>
+

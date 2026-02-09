@@ -57,12 +57,16 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
     <ClientRouter />
     <script is:inline>
       ;(function () {
-        const theme =
-          localStorage.getItem('theme') ||
-          (window.matchMedia('(prefers-color-scheme: light)').matches
-            ? 'light'
-            : 'dark')
-        document.documentElement.setAttribute('data-theme', theme)
+        function applyTheme() {
+          const theme =
+            localStorage.getItem('theme') ||
+            (window.matchMedia('(prefers-color-scheme: light)').matches
+              ? 'light'
+              : 'dark')
+          document.documentElement.setAttribute('data-theme', theme)
+        }
+        applyTheme()
+        document.addEventListener('astro:after-swap', applyTheme)
       })()
     </script>
   </head>
@@ -108,6 +112,28 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
             main.removeEventListener('animationend', handler)
           })
           pendingDir = 'none'
+        })
+      })()
+    </script>
+    <script is:inline>
+      ;(function () {
+        const chars = '!@#$%^&*_+-=[]{}|;:<>?/~0123456789'
+        let throttle = 0
+        document.addEventListener('mousemove', function (e) {
+          const now = Date.now()
+          if (now - throttle < 50) return
+          throttle = now
+          const p = document.createElement('span')
+          p.className = 'mouse-particle'
+          p.textContent = chars[Math.floor(Math.random() * chars.length)]
+          const angle = Math.random() * Math.PI * 2
+          const dist = 15 + Math.random() * 25
+          p.style.left = e.pageX + 'px'
+          p.style.top = e.pageY + 'px'
+          p.style.setProperty('--dx', Math.cos(angle) * dist + 'px')
+          p.style.setProperty('--dy', Math.sin(angle) * dist + 'px')
+          document.body.appendChild(p)
+          p.addEventListener('animationend', function () { p.remove() })
         })
       })()
     </script>
@@ -159,18 +185,64 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
     background-color: var(--bg);
     color: var(--fg);
     line-height: 1.6;
-    min-height: 100vh;
+    height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-bottom: 2rem;
+    justify-content: center;
+    padding: 2rem;
+    overflow: hidden;
   }
 
   main {
     width: 100%;
     max-width: 80ch;
-    padding: 2rem 1rem;
+    height: 100%;
+    padding: 1rem 1rem 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  @media (min-width: 768px) {
+    main {
+      max-height: 75vh;
+    }
+  }
+
+  .page-content {
     flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .page-content::before,
+  .page-content::after {
+    content: '';
+    flex: 1;
+  }
+
+  .mouse-particle {
+    position: absolute;
+    pointer-events: none;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    opacity: 0.7;
+    animation: mouse-particle-drift 1.5s ease-out forwards;
+  }
+
+  @keyframes mouse-particle-drift {
+    0% {
+      transform: translate(0, 0);
+      opacity: 0.7;
+    }
+    100% {
+      transform: translate(var(--dx), var(--dy));
+      opacity: 0;
+    }
   }
 
 </style>

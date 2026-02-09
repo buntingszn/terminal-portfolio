@@ -15,6 +15,7 @@ const sorted = [...featured, ...others]
 <Base title={`Work | ${meta.name}`} description="Projects and work">
   <Nav current="work" />
 
+  <div class="page-content">
   <GradientHeading text="Projects" />
 
   <section class="project-list" aria-label="Projects">
@@ -55,12 +56,9 @@ const sorted = [...featured, ...others]
       ))
     }
   </section>
+  </div>
 
-  <StatusBar
-    left="~/work"
-    center="j/k scroll · 1-4 nav · ? help"
-    right="WORK"
-  />
+  <StatusBar center="j/k scroll · 1-4 nav · ? help" />
 </Base>
 
 <style>

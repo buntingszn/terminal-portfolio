@@ -16,9 +16,10 @@ const domain = new URL(cv.contact.website).hostname
 <Base title={`cv | ${meta.name}`} description={cv.summary}>
   <Nav current="cv" />
 
+  <div class="page-content">
   <section class="neofetch" aria-label="Profile overview">
     <div class="info">
-      <GradientHeading tag="h2" text={`${nameSlug}@${domain}`} class="neofetch-header" />
+      <GradientHeading tag="h2" text={meta.name} class="neofetch-header" />
       <p class="contact-line">
         {cv.contact.email} &middot; {cv.contact.location} &middot; <a href={cv.contact.website}>{cv.contact.website}</a>
       </p>
@@ -78,8 +79,9 @@ const domain = new URL(cv.contact.website).hostname
       ))
     }
   </section>
+  </div>
 
-  <StatusBar left="[cv]" center={meta.name} right={meta.version} />
+  <StatusBar center={meta.name} />
 </Base>
 
 <style>
@@ -165,8 +167,13 @@ const domain = new URL(cv.contact.website).hostname
   }
 
   .experience-entry ul {
+    list-style: none;
     padding-left: 1.5rem;
     margin-bottom: 0;
+  }
+
+  .experience-entry li::before {
+    content: '- ';
   }
 
   .experience-entry li {
