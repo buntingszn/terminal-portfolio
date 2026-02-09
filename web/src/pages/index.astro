@@ -3,12 +3,11 @@ import Base from '@layouts/Base.astro'
 import Nav from '@components/Nav.astro'
 import StatusBar from '@components/StatusBar.astro'
 import AsciiPortrait from '@components/AsciiPortrait.astro'
+import portraitData from '@data/assets/portrait.json'
 import { getMeta, getAbout } from '../lib/data'
 
 const meta = getMeta()
 const about = getAbout()
-
-import portraitData from '@data/assets/portrait.json'
 ---
 
 <Base title={meta.name} description={meta.oneLiner}>
@@ -31,7 +30,7 @@ import portraitData from '@data/assets/portrait.json'
     </section>
   </div>
 
-  <StatusBar center="j/k scroll · 1-4 nav · ? help" />
+  <StatusBar center="←/→ nav · ? help" />
 </Base>
 
 <script>
@@ -98,14 +97,13 @@ import portraitData from '@data/assets/portrait.json'
 
 <style>
   .about {
-    padding: 5rem 0;
+    padding: 0;
   }
 
   .about-content {
     display: flex;
     gap: 2rem;
     align-items: center;
-    font-size: 1.05rem;
   }
 
   .about-text {
@@ -141,4 +139,3 @@ import portraitData from '@data/assets/portrait.json'
     }
   }
 </style>
-

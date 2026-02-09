@@ -26,6 +26,10 @@
             "description": "Target URL (supports https, mailto, ssh, and other URI schemes).",
             "format": "uri"
           },
+          "text": {
+            "type": "string",
+            "description": "Optional display text shown instead of the raw URL."
+          },
           "icon": {
             "type": "string",
             "description": "Icon identifier used by both web and TUI renderers (e.g. \"github\", \"mail\", \"terminal\").",

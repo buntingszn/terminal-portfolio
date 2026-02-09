@@ -38,7 +38,7 @@ function getIcon(icon: string): string {
               <span class="icon">{getIcon(link.icon)}</span>
               <span class="link-content">
                 <span class="label">{link.label}</span>
-                <span class="url">{link.url}</span>
+                <span class="url">{link.text || link.url}</span>
               </span>
             </a>
           </li>
@@ -48,7 +48,7 @@ function getIcon(icon: string): string {
   </section>
   </div>
 
-  <StatusBar center="j/k scroll · 1-4 nav · ? help" />
+  <StatusBar center="←/→ nav · ? help" />
 </Base>
 
 <style>
@@ -65,10 +65,6 @@ function getIcon(icon: string): string {
     .link-list {
       grid-template-columns: 1fr;
     }
-  }
-
-  .link-list li {
-    padding: 0;
   }
 
   .link-list a {
@@ -103,7 +99,6 @@ function getIcon(icon: string): string {
     width: 2ch;
     flex-shrink: 0;
     text-align: center;
-    font-size: 0.9rem;
     font-weight: 700;
   }
 
@@ -124,10 +119,8 @@ function getIcon(icon: string): string {
 
   .url {
     color: var(--muted);
-    font-size: 0.8rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    padding-left: 0;
   }
 </style>

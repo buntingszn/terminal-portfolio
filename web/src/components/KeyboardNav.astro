@@ -14,12 +14,16 @@
       return
     }
 
+    const pages = ['/', '/work', '/cv', '/links']
+    const current = window.location.pathname.replace(/\/$/, '') || '/'
+    const idx = pages.indexOf(current)
+
     switch (e.key) {
-      case 'j':
-        window.scrollBy({ top: 100, behavior: 'smooth' })
+      case 'ArrowLeft':
+        if (idx > 0) window.location.href = pages[idx - 1]
         break
-      case 'k':
-        window.scrollBy({ top: -100, behavior: 'smooth' })
+      case 'ArrowRight':
+        if (idx < pages.length - 1) window.location.href = pages[idx + 1]
         break
       case '1':
         window.location.href = '/'
