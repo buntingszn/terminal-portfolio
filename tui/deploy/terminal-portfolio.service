@@ -1,0 +1,147 @@
+# terminal-portfolio.service
+# Systemd unit file for the Terminal Portfolio SSH server.
+#
+# This service runs a Bubbletea TUI served over SSH via the Wish library.
+# Users connect with: ssh -p 2222 <hostname>
+#
+# ============================================================================
+# Installation Steps:
+# ============================================================================
+#
+# 1. Create a dedicated system user (no login shell, no home directory):
+#
+#      sudo useradd --system --shell /usr/sbin/nologin \
+#        --home-dir /opt/terminal-portfolio \
+#        --create-home terminal-portfolio
+#
+# 2. Deploy the binary and data:
+#
+#      sudo mkdir -p /opt/terminal-portfolio/bin
+#      sudo cp bin/terminal-portfolio /opt/terminal-portfolio/bin/
+#      sudo cp -r ../../data /opt/terminal-portfolio/data
+#      sudo chown -R terminal-portfolio:terminal-portfolio /opt/terminal-portfolio
+#
+# 3. Create the environment file from the template:
+#
+#      sudo cp deploy/env.example /opt/terminal-portfolio/env
+#      sudo chmod 640 /opt/terminal-portfolio/env
+#      sudo chown root:terminal-portfolio /opt/terminal-portfolio/env
+#
+# 4. Install this unit file:
+#
+#      sudo cp deploy/terminal-portfolio.service /etc/systemd/system/
+#      sudo systemctl daemon-reload
+#
+# 5. Enable and start:
+#
+#      sudo systemctl enable --now terminal-portfolio.service
+#
+# 6. Check status:
+#
+#      sudo systemctl status terminal-portfolio.service
+#      sudo journalctl -u terminal-portfolio.service -f
+#
+# ============================================================================
+# Firewall (Fedora with ai-homelab zone):
+# ============================================================================
+#
+#   sudo firewall-cmd --zone=ai-homelab --add-port=2222/tcp --permanent
+#   sudo firewall-cmd --reload
+#
+# ============================================================================
+
+[Unit]
+Description=Terminal Portfolio SSH Server
+Documentation=https://github.com/buntingszn/terminal-portfolio
+
+# Wait for networking to be available before starting.
+After=network.target
+
+# Limit restart attempts: max 5 restarts within 60 seconds.
+# After that, systemd stops trying (prevents thrashing on persistent errors).
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+# Optional: if the service depends on other services, add them here.
+# After=network.target some-other.service
+
+[Service]
+# Run as a dedicated non-root user for security.
+User=terminal-portfolio
+Group=terminal-portfolio
+
+# Working directory where the binary and data reside.
+WorkingDirectory=/opt/terminal-portfolio
+
+# The server binary. It reads configuration from environment variables.
+ExecStart=/opt/terminal-portfolio/bin/terminal-portfolio
+
+# Load environment variables from the env file.
+# This file contains TERMINAL_PORTFOLIO_* variables.
+# Permissions should be 640 (root:terminal-portfolio) to protect secrets.
+EnvironmentFile=/opt/terminal-portfolio/env
+
+# Restart policy: restart on any non-zero exit code.
+# This handles crashes but not explicit stops (systemctl stop).
+Restart=on-failure
+
+# Wait 5 seconds between restart attempts to avoid rapid restart loops.
+RestartSec=5
+
+# Send SIGTERM for graceful shutdown (the server handles this signal).
+# The server has a 10-second internal shutdown timeout.
+KillSignal=SIGTERM
+
+# Give the process 15 seconds to shut down gracefully before SIGKILL.
+TimeoutStopSec=15
+
+# Security hardening: restrict what the service can do.
+# These are systemd sandboxing features that limit the attack surface.
+
+# Prevent the service from gaining new privileges via setuid/setgid binaries.
+NoNewPrivileges=yes
+
+# Make the entire filesystem read-only except for specific paths.
+ProtectSystem=strict
+
+# Prevent access to /home, /root, and /run/user.
+ProtectHome=yes
+
+# Create a private /tmp and /var/tmp for the service.
+PrivateTmp=yes
+
+# Prevent writing to kernel variables via /proc/sys, /sys, etc.
+ProtectKernelTunables=yes
+
+# Prevent loading kernel modules.
+ProtectKernelModules=yes
+
+# Prevent changing the kernel log level.
+ProtectKernelLogs=yes
+
+# Prevent access to hardware /dev nodes (except /dev/null, /dev/zero, etc.).
+PrivateDevices=yes
+
+# Prevent changing the system clock.
+ProtectClock=yes
+
+# Prevent access to control groups (/sys/fs/cgroup).
+ProtectControlGroups=yes
+
+# Restrict the set of address families the service can use.
+# AF_INET and AF_INET6 for TCP/SSH, AF_UNIX for logging.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+# Allow SSH host key directory to be writable (for auto-generated keys).
+ReadWritePaths=/opt/terminal-portfolio/.ssh
+
+# Log output goes to the journal (viewable with journalctl).
+StandardOutput=journal
+StandardError=journal
+
+# Tag journal entries for easy filtering.
+SyslogIdentifier=terminal-portfolio
+
+[Install]
+# Start this service when the system reaches multi-user mode (normal boot).
+WantedBy=multi-user.target

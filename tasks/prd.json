@@ -1,0 +1,662 @@
+{
+  "name": "terminal-portfolio-polish",
+  "description": "TUI responsive layout, interaction polish, and comprehensive test coverage. Ensures the TUI renders correctly across a wide range of terminal sizes (from 40x15 to 200x60) and aspect ratios, fixes visual clunkiness, and adds missing test coverage for section views and edge cases.",
+  "branchName": "main",
+  "baseBranch": "main",
+  "qualityGates": [
+    "make check"
+  ],
+  "phases": [
+    {
+      "id": 11,
+      "name": "Responsive Layout Engine",
+      "description": "Centralize viewport dimension calculation, fix chrome components (navbar, statusbar, palette, help overlay) for narrow/short terminals, add minimum-size guard.",
+      "stories": "US-061 to US-066"
+    },
+    {
+      "id": 12,
+      "name": "Section Responsiveness",
+      "description": "Fix all four section views and the boot sequence to render correctly at any terminal size, using centralized available-height and proper text handling.",
+      "stories": "US-067 to US-072"
+    },
+    {
+      "id": 13,
+      "name": "Interaction Polish",
+      "description": "Add missing keyboard/mouse interactions, fix transition animation styling corruption, wire up idle timeout, improve navigation fluidity.",
+      "stories": "US-073 to US-078"
+    },
+    {
+      "id": 14,
+      "name": "Visual Polish",
+      "description": "Refine visual presentation: consistent spacing, improved scrollbar, card border edge cases, boot sequence timing, help overlay styling.",
+      "stories": "US-079 to US-084"
+    },
+    {
+      "id": 15,
+      "name": "Test Coverage & Quality",
+      "description": "Comprehensive test coverage for section views, chrome components at extreme sizes, viewport interactions, transitions, and SSH resize scenarios.",
+      "stories": "US-085 to US-090"
+    }
+  ],
+  "userStories": [
+    {
+      "id": "US-061",
+      "title": "Centralize chrome height calculation and propagate adjusted dimensions to sections",
+      "description": "As a TUI developer, I need the root model to calculate the exact available height for section content (total height minus navbar, padding lines, and statusbar) and pass adjusted dimensions to sections, so that sections never overlap or clip against chrome.",
+      "phase": 11,
+      "priority": 1,
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "Root model (app.go) computes chromeHeight as a constant or function: navbar(1) + blank-line(1) + statusbar(1) = 3 lines",
+        "When palette is visible, chromeHeight includes palette height (4 lines for border+prompt+hints+border)",
+        "WindowSizeMsg propagated to sections has Height adjusted to (terminal height - chromeHeight)",
+        "All sections (home, work, cv, links) use the adjusted height directly without hardcoded subtraction",
+        "Remove hardcoded 'height - 4' from CVSection.viewportHeight() and similar patterns in other sections",
+        "Sections render correctly at terminal heights: 15, 24, 40, 60 rows",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-062",
+      "title": "Progressive navbar adaptation for narrow terminals",
+      "description": "As a user with a narrow terminal, I want the navbar to adapt its tab labels progressively so that navigation remains usable and the bar never overflows.",
+      "phase": 11,
+      "priority": 1,
+      "dependsOn": [
+        "US-061"
+      ],
+      "acceptanceCriteria": [
+        "At width >= 40: full labels shown: [1:home]\u2500[2:work]\u2500[3:cv]\u2500[4:links]",
+        "At width 25-39: short labels: [1:hm]\u2500[2:wk]\u2500[3:cv]\u2500[4:lk]",
+        "At width < 25: number-only labels: [1]\u2500[2]\u2500[3]\u2500[4]",
+        "Fill line (\u2500\u2500\u2500\u2500\u2500) after tabs adjusts to remaining width, never goes negative",
+        "Tab bar never exceeds terminal width at any size",
+        "Active tab accent color works at all label widths",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-063",
+      "title": "Rune-safe statusbar truncation and narrow-terminal layout",
+      "description": "As a TUI developer, I need the statusbar to use lipgloss.Width() for measuring visual width and truncate hints at rune boundaries, so that multi-byte characters (like \u00b7) are never split.",
+      "phase": 11,
+      "priority": 1,
+      "dependsOn": [
+        "US-061"
+      ],
+      "acceptanceCriteria": [
+        "StatusBar.Render uses lipgloss.Width() instead of len() for measuring left, center, and right zone widths",
+        "Hints truncation happens at rune boundaries, never splitting a multi-byte character",
+        "At width < 30: center hints zone is hidden entirely, only left path and right section shown",
+        "At width < 15: only section name shown (right zone), left zone hidden",
+        "StatusBar background color spans full terminal width at all sizes",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-064",
+      "title": "Responsive command palette and help overlay sizing",
+      "description": "As a user, I want the command palette and help overlay to render correctly at any terminal size without overflowing or being cut off.",
+      "phase": 11,
+      "priority": 2,
+      "dependsOn": [
+        "US-061"
+      ],
+      "acceptanceCriteria": [
+        "Palette clamps its width to the actual terminal width (never exceeds it)",
+        "Palette minimum width is removed or reduced to terminal width when terminal is very narrow",
+        "Palette hint text ('home work cv links theme quit help') truncated or hidden at narrow widths",
+        "Help overlay centered both horizontally and vertically using lipgloss.Place",
+        "Help overlay wrapped in box-drawing border matching the design system",
+        "Help overlay respects terminal height (scrollable or truncated if taller than terminal)",
+        "Both palette and help work correctly at 40x15, 80x24, and 120x40",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-065",
+      "title": "Minimum terminal size guard with friendly message",
+      "description": "As a user connecting from a very small terminal, I want to see a clear message asking me to resize rather than broken/overlapping UI elements.",
+      "phase": 11,
+      "priority": 2,
+      "dependsOn": [
+        "US-061"
+      ],
+      "acceptanceCriteria": [
+        "When terminal width < 20 or height < 8, View() returns a centered 'Terminal too small' message",
+        "Message suggests minimum size (e.g., 'Please resize to at least 20x8')",
+        "Message uses accent color for emphasis",
+        "When terminal is resized above minimum, normal UI returns immediately",
+        "Guard applied in root model View() before any other rendering",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-066",
+      "title": "Viewport scroll position preservation on resize",
+      "description": "As a user, I want my scroll position to be preserved (or clamped intelligently) when I resize my terminal, so I don't lose my place in the content.",
+      "phase": 11,
+      "priority": 3,
+      "dependsOn": [
+        "US-061"
+      ],
+      "acceptanceCriteria": [
+        "Viewport.SetSize clamps yOffset to new maxOffset without resetting to 0",
+        "Viewport.SetContent preserves scroll position proportionally when content length changes (e.g., due to re-wrap)",
+        "If user was at bottom before resize, they remain at bottom after resize",
+        "If user was at top before resize, they remain at top after resize",
+        "If content shrinks below scroll position, position is clamped to new bottom",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-067",
+      "title": "Home section responsive portrait and content layout",
+      "description": "As a user viewing the home section, I want the portrait and hero text to adapt fluidly to terminal width, and the viewport to use the correct available height.",
+      "phase": 12,
+      "priority": 1,
+      "dependsOn": [
+        "US-061"
+      ],
+      "acceptanceCriteria": [
+        "Home section uses the adjusted height from root model (no hardcoded chrome subtraction)",
+        "Portrait shown at width >= 80 with responsive gap (proportional to available space, not fixed 4 spaces)",
+        "Bio card width matches terminal width minus scrollbar (1 char) when scrollbar is visible",
+        "Divider width matches content width",
+        "All text wraps properly at narrow widths (40-60 cols)",
+        "No content overflow or horizontal scrolling at any tested width",
+        "Renders correctly at 40x15, 80x24, 120x40",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-068",
+      "title": "Work section scrollbar-aware card width and text wrapping",
+      "description": "As a user viewing the work section, I want project cards to fit within the visible area without being clipped by the scrollbar.",
+      "phase": 12,
+      "priority": 1,
+      "dependsOn": [
+        "US-061"
+      ],
+      "acceptanceCriteria": [
+        "Work section uses the adjusted height from root model",
+        "Card width accounts for scrollbar when content exceeds viewport height (width - 1 for scrollbar)",
+        "Card max width capped at 78 (80 - 2 for potential scrollbar margin) instead of 80",
+        "Tag lines wrap within card inner width instead of overflowing",
+        "Long project descriptions wrap cleanly within card borders",
+        "URL/repo lines truncated with ellipsis if wider than card inner width",
+        "Renders correctly at 40x15, 80x24, 120x40",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-069",
+      "title": "CV neofetch layout responsive breakpoints and text overflow",
+      "description": "As a user viewing the CV section, I want the neofetch layout to handle text overflow in experience bullets and skill items without breaking the layout.",
+      "phase": 12,
+      "priority": 1,
+      "dependsOn": [
+        "US-061"
+      ],
+      "acceptanceCriteria": [
+        "CV section uses the adjusted height from root model (remove hardcoded viewportHeight)",
+        "Experience bullet text wraps within available width (not the full terminal width)",
+        "Skill item lists (comma-separated) wrap to next line when they exceed info block width",
+        "Info divider width accounts for scrollbar (width - 1 when scrollbar visible)",
+        "At width 40-59: art hidden, info block uses full width with proper wrapping",
+        "At width >= 60: art shown, info block width = terminal width - art width - gap - scrollbar",
+        "Key-value label padding (%-11s) reduced at narrow widths if needed",
+        "Renders correctly at 40x15, 60x24, 80x24, 120x40",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-070",
+      "title": "Links section viewport height and URL truncation",
+      "description": "As a user viewing the links section, I want URLs to be truncated gracefully on narrow terminals and the viewport to use the correct available height.",
+      "phase": 12,
+      "priority": 2,
+      "dependsOn": [
+        "US-061"
+      ],
+      "acceptanceCriteria": [
+        "Links section uses the adjusted height from root model",
+        "URLs truncated with '...' when they exceed available width (width - icon indent - scrollbar)",
+        "padToWidth uses lipgloss.Width() instead of len() for correct Unicode measurement",
+        "Selected link highlight (> prefix) renders correctly at all widths",
+        "Scroll-to-cursor logic works correctly when viewport height changes on resize",
+        "Renders correctly at 40x15, 80x24, 120x40",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-071",
+      "title": "Boot sequence responsive message handling",
+      "description": "As a user with a narrow or short terminal, I want the boot sequence to adapt so long messages are truncated and vertical overflow is handled gracefully.",
+      "phase": 12,
+      "priority": 2,
+      "dependsOn": [
+        "US-061"
+      ],
+      "acceptanceCriteria": [
+        "Boot messages truncated with '...' when they exceed terminal width",
+        "When terminal height < number of boot messages, only the most recent N messages are shown (scrolling window)",
+        "IntroModel stores terminal width/height (receives WindowSizeMsg via root model)",
+        "Boot sequence renders correctly at 40x15 (narrow) and 80x10 (short)",
+        "Skip-on-keypress still works at all sizes",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-072",
+      "title": "Consistent content re-render on resize across all sections",
+      "description": "As a user resizing my terminal, I want all section content to re-render with correct wrapping and layout immediately, preserving my approximate scroll position.",
+      "phase": 12,
+      "priority": 2,
+      "dependsOn": [
+        "US-067",
+        "US-068",
+        "US-069",
+        "US-070"
+      ],
+      "acceptanceCriteria": [
+        "All four sections call renderContent() in their WindowSizeMsg handler",
+        "Scroll position preserved proportionally after re-render (if at 50% scroll, stay near 50%)",
+        "Card borders re-wrap to new width on resize",
+        "CV neofetch layout switches between art/no-art modes on resize across the 60-col threshold",
+        "Home portrait appears/disappears on resize across the 80-col threshold",
+        "No visual glitches during rapid resize events",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-073",
+      "title": "Add Page Up/Down, half-page scroll, and Home/End to viewport",
+      "description": "As a user, I want to scroll through long content using Page Up/Down and half-page shortcuts in addition to j/k line scrolling.",
+      "phase": 13,
+      "priority": 1,
+      "dependsOn": [
+        "US-061"
+      ],
+      "acceptanceCriteria": [
+        "Page Up (pgup) scrolls up by viewport height",
+        "Page Down (pgdown) scrolls down by viewport height",
+        "Ctrl+u scrolls up by half viewport height",
+        "Ctrl+d scrolls down by half viewport height",
+        "Home key scrolls to top (same as g)",
+        "End key scrolls to bottom (same as G)",
+        "All scroll actions clamp to valid range (no over-scroll)",
+        "Key bindings added to all four sections' Update handlers",
+        "KeyHints updated to mention pgup/pgdn",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-074",
+      "title": "Add mouse wheel scroll support",
+      "description": "As a user, I want to scroll section content using my mouse wheel, which is the most intuitive way to scroll in a terminal.",
+      "phase": 13,
+      "priority": 1,
+      "dependsOn": [
+        "US-061"
+      ],
+      "acceptanceCriteria": [
+        "Mouse wheel up scrolls viewport up by 3 lines",
+        "Mouse wheel down scrolls viewport down by 3 lines",
+        "Enable mouse support in the Bubbletea program (tea.WithMouseCellMotion or tea.WithMouseAllMotion)",
+        "Mouse events handled in each section's Update method",
+        "Mouse scroll works during normal viewing (not during intro, transitions, or palette)",
+        "Mouse support enabled in the SSH server's Bubbletea middleware options",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-075",
+      "title": "Fix transition animation ANSI/style corruption",
+      "description": "As a user, I want section transitions to look smooth without garbled colors or broken text, which currently happens because shiftLine operates on raw runes including ANSI escape sequences.",
+      "phase": 13,
+      "priority": 1,
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "Transition View() uses lipgloss-aware line shifting instead of raw rune manipulation",
+        "ANSI escape sequences are preserved through the shift operation (not split across positions)",
+        "Alternative approach: use lipgloss.PlaceHorizontal with offset for each line instead of manual rune shifting",
+        "Styled text (accent, muted, bold) renders correctly during transition at all animation steps",
+        "Transition still completes in ~160ms (10 steps at 16ms frame interval)",
+        "Fallback for width < 20 still shows toView immediately (no animation)",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-076",
+      "title": "Tab and Shift-Tab for section cycling",
+      "description": "As a user, I want to use Tab and Shift-Tab to cycle forward and backward through sections, which is a natural keyboard pattern.",
+      "phase": 13,
+      "priority": 2,
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "Tab key navigates to the next section (home\u2192work\u2192cv\u2192links\u2192home)",
+        "Shift-Tab navigates to the previous section (home\u2192links\u2192cv\u2192work\u2192home)",
+        "Section cycling wraps around (links + Tab = home, home + Shift-Tab = links)",
+        "Tab/Shift-Tab blocked during transitions (same as other navigation keys)",
+        "Tab/Shift-Tab blocked when palette or help overlay is visible",
+        "KeyHints or help overlay updated to mention Tab navigation",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-077",
+      "title": "Wire up idle timeout disconnect for SSH sessions",
+      "description": "As a server operator, I want idle SSH sessions to be disconnected after a configurable timeout so that server resources are freed.",
+      "phase": 13,
+      "priority": 2,
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "Idle timeout tracked per SSH session based on last key/mouse input",
+        "Default idle timeout from config (Config.IdleTimeout, default 30 minutes)",
+        "Session sends a warning message 1 minute before disconnect",
+        "Session gracefully disconnects when timeout expires",
+        "Any key press or mouse event resets the idle timer",
+        "Timeout disabled when set to 0 in config",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-078",
+      "title": "Improve navigation fluidity: skip redundant transitions and speed tuning",
+      "description": "As a user, I want navigation to feel snappy: no transition when navigating to the already-active section, faster transitions for adjacent sections, and consistent focus behavior.",
+      "phase": 13,
+      "priority": 3,
+      "dependsOn": [
+        "US-075"
+      ],
+      "acceptanceCriteria": [
+        "Navigating to the current section is a no-op (no transition animation triggered)",
+        "Adjacent section transitions (e.g., home\u2192work) use fewer steps than distant ones (e.g., home\u2192links)",
+        "After transition completes, active section receives FocusMsg (verify this is consistent)",
+        "Section scroll position reset to top on first focus (but preserved on re-focus from palette/help)",
+        "No duplicate NavigateMsg processing (guard against rapid key presses queuing multiple navigations)",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-079",
+      "title": "Help overlay with centered box border and proper sizing",
+      "description": "As a user, I want the help overlay to look polished with a centered box-drawing border, proper sizing, and consistent styling.",
+      "phase": 14,
+      "priority": 1,
+      "dependsOn": [
+        "US-064"
+      ],
+      "acceptanceCriteria": [
+        "Help overlay wrapped in box-drawing border using RenderCard or similar",
+        "Help overlay centered both horizontally and vertically using lipgloss.Place(width, height, ...)",
+        "Background behind the overlay uses a dimmed/muted style to indicate it's an overlay",
+        "Shortcut keys displayed in two-column format: key (accent) + description (body), aligned",
+        "Help content includes all shortcuts: 1-4, j/k, g/G, pgup/pgdn, Tab/Shift-Tab, t, :, q, ?",
+        "Help overlay sized to content (not full-screen), with reasonable max width (e.g., 50 chars)",
+        "Renders correctly at 40x15, 80x24, 120x40",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-080",
+      "title": "Consistent section padding and spacing at all terminal sizes",
+      "description": "As a user, I want consistent visual spacing across all sections regardless of terminal size, with no awkward gaps or cramped text.",
+      "phase": 14,
+      "priority": 1,
+      "dependsOn": [
+        "US-067",
+        "US-068",
+        "US-069",
+        "US-070"
+      ],
+      "acceptanceCriteria": [
+        "All sections use consistent left margin (0-1 chars) at all widths",
+        "Section headings ('Projects', 'Links', 'Experience', 'Skills') use consistent spacing: heading + blank line + content",
+        "Card spacing between items is consistent: 1 blank line between cards",
+        "Home section spacing between hero, divider, bio, info, interests, education is consistent",
+        "No double-blank-lines or missing separators at any terminal width",
+        "Content doesn't touch the right edge (minimum 1 char margin when scrollbar is not visible)",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-081",
+      "title": "Card border edge cases: long titles, minimal width, empty content",
+      "description": "As a TUI developer, I need RenderCard to handle edge cases gracefully so that cards never produce broken visual output.",
+      "phase": 14,
+      "priority": 2,
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "RenderCard with title longer than available width truncates title with '...' suffix",
+        "RenderCard at width 10-15 renders a minimal but correct bordered box",
+        "RenderCard with empty content string renders the box with just the title border and an empty body",
+        "RenderCard with width < 10 returns content without border (existing behavior) but also without padding issues",
+        "RenderDivider with width 0 returns empty string (existing behavior verified)",
+        "wrapText and padRight use lipgloss.Width() for correct visual width measurement with ANSI/Unicode",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-082",
+      "title": "Scrollbar visual refinement",
+      "description": "As a user, I want the viewport scrollbar to look clean with a subtle track and proportional thumb that clearly indicates my position in the content.",
+      "phase": 14,
+      "priority": 2,
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "Scrollbar track uses border color (subtler than current muted color)",
+        "Scrollbar thumb uses muted color (subtler than current accent color) to reduce visual noise",
+        "Thumb height is proportional: visibleHeight/totalLines * trackHeight (minimum 1 char)",
+        "At-top indicator: \u25b2 arrow shown above scrollbar when not at top",
+        "At-bottom indicator: \u25bc arrow shown below scrollbar when not at bottom",
+        "When all content fits (no scrolling needed), scrollbar column is omitted entirely (full width for content)",
+        "Scrollbar renders correctly at viewport heights from 5 to 60",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-083",
+      "title": "Boot sequence timing polish and ready state",
+      "description": "As a user, I want the boot sequence to feel like a real POST sequence with a brief 'ready' pause before transitioning to the home section.",
+      "phase": 14,
+      "priority": 3,
+      "dependsOn": [
+        "US-071"
+      ],
+      "acceptanceCriteria": [
+        "Final boot message ('All systems nominal. Welcome.') displayed with a slightly longer delay (300ms instead of 150ms)",
+        "After all messages are revealed, a brief 500ms pause before IntroDoneMsg is sent",
+        "Blinking cursor (\u2588) appears after final message during the pause",
+        "Total boot sequence duration stays under 4 seconds (including the ready pause)",
+        "Skip behavior still works during the pause (any key immediately transitions)",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-084",
+      "title": "StatusBar contextual improvements",
+      "description": "As a user, I want the statusbar to show useful contextual information like scroll position and section count.",
+      "phase": 14,
+      "priority": 3,
+      "dependsOn": [
+        "US-063"
+      ],
+      "acceptanceCriteria": [
+        "Right zone shows scroll percentage when content is scrollable (e.g., 'HOME 45%')",
+        "When at top, shows 'TOP' instead of percentage; at bottom, shows 'BOT'",
+        "When content fits without scrolling, shows just the section name (no percentage)",
+        "Left zone shows path format: ~/section (existing behavior, verified)",
+        "Center zone key hints truncated progressively: full \u2192 abbreviated \u2192 hidden",
+        "StatusBar integrates with viewport scroll state via a new SectionModel method or message",
+        "make check passes"
+      ],
+      "passes": true
+    },
+    {
+      "id": "US-085",
+      "title": "Section view rendering tests at multiple terminal size breakpoints",
+      "description": "As a TUI developer, I need comprehensive tests for all four section views verifying correct rendering at various terminal sizes.",
+      "phase": 15,
+      "priority": 1,
+      "dependsOn": [
+        "US-067",
+        "US-068",
+        "US-069",
+        "US-070"
+      ],
+      "acceptanceCriteria": [
+        "Test file: internal/app/sections/sections_test.go (or per-section test files)",
+        "Each section tested at 4 sizes: 40x15, 60x20, 80x24, 120x40",
+        "HomeSection tests: portrait visibility threshold at 80 cols, hero text wrapping, bio card width",
+        "WorkSection tests: card width capped correctly, tag wrapping, featured/regular separation",
+        "CVSection tests: art visible at >=60, hidden at <60, experience bullets wrap, skills wrap",
+        "LinksSection tests: URL truncation at narrow width, cursor navigation, scroll-to-cursor",
+        "All tests verify no panic and non-empty output at each size",
+        "Tests use testutil.FixtureContent() and testutil.FixtureTheme()",
+        "go test ./internal/app/sections/ -race passes",
+        "make check passes"
+      ],
+      "passes": false
+    },
+    {
+      "id": "US-086",
+      "title": "Chrome component edge case tests at extreme sizes",
+      "description": "As a TUI developer, I need tests verifying navbar, statusbar, palette, and help overlay render correctly at extreme terminal sizes.",
+      "phase": 15,
+      "priority": 1,
+      "dependsOn": [
+        "US-062",
+        "US-063",
+        "US-064"
+      ],
+      "acceptanceCriteria": [
+        "NavBar tested at widths: 15, 25, 40, 80, 200",
+        "NavBar tests verify: progressive label truncation, no overflow, active tab highlighting",
+        "StatusBar tested at widths: 10, 20, 40, 80, 200",
+        "StatusBar tests verify: zone visibility thresholds, rune-safe truncation, full-width background",
+        "Palette tested at widths: 15, 30, 80",
+        "Palette tests verify: clamped width, hint text truncation, border rendering",
+        "Help overlay tested at sizes: 30x10, 50x15, 80x24",
+        "All tests added to existing test files (app_test.go or new dedicated files)",
+        "go test ./internal/app/ -race passes",
+        "make check passes"
+      ],
+      "passes": false
+    },
+    {
+      "id": "US-087",
+      "title": "Viewport interaction tests: page scroll, mouse, resize preservation",
+      "description": "As a TUI developer, I need tests for all new viewport interaction features and scroll position preservation.",
+      "phase": 15,
+      "priority": 1,
+      "dependsOn": [
+        "US-066",
+        "US-073",
+        "US-074"
+      ],
+      "acceptanceCriteria": [
+        "Tests for page up/down scrolling by viewport height",
+        "Tests for half-page scroll (Ctrl+u, Ctrl+d)",
+        "Tests for mouse wheel scroll (up and down by 3 lines)",
+        "Tests for scroll position preservation on resize: position clamped, at-top stays at-top, at-bottom stays at-bottom",
+        "Tests for SetContent with position preservation (proportional scroll)",
+        "Tests for edge cases: scroll when content < viewport height, scroll at boundaries",
+        "Added to viewport_test.go",
+        "go test ./internal/app/ -race passes",
+        "make check passes"
+      ],
+      "passes": false
+    },
+    {
+      "id": "US-088",
+      "title": "Transition and animation unit tests",
+      "description": "As a TUI developer, I need tests for transition animation correctness, including ANSI preservation and direction logic.",
+      "phase": 15,
+      "priority": 2,
+      "dependsOn": [
+        "US-075"
+      ],
+      "acceptanceCriteria": [
+        "Test file: internal/app/transition_test.go",
+        "Tests verify: transition direction (right for forward, left for backward)",
+        "Tests verify: animation progresses through steps correctly",
+        "Tests verify: TransitionDoneMsg sent after final step",
+        "Tests verify: ANSI styled text preserved through transition (no garbled output)",
+        "Tests verify: fallback for width < 20 returns toView immediately",
+        "Tests verify: easeInOut function returns expected values at 0.0, 0.25, 0.5, 0.75, 1.0",
+        "go test ./internal/app/ -race passes",
+        "make check passes"
+      ],
+      "passes": false
+    },
+    {
+      "id": "US-089",
+      "title": "Integration tests: resize during active SSH session",
+      "description": "As a TUI developer, I need integration tests verifying the TUI handles terminal resize events correctly over SSH.",
+      "phase": 15,
+      "priority": 2,
+      "dependsOn": [
+        "US-072"
+      ],
+      "acceptanceCriteria": [
+        "Test in internal/server/ssh_test.go or new integration test file",
+        "Test connects to SSH server, waits for boot sequence to complete",
+        "Test sends window-change request to simulate terminal resize",
+        "Test verifies the TUI re-renders without errors after resize",
+        "Test verifies output dimensions match the new terminal size",
+        "Test covers resize from large-to-small and small-to-large",
+        "go test ./internal/server/ -race passes",
+        "make check passes"
+      ],
+      "passes": false
+    },
+    {
+      "id": "US-090",
+      "title": "Regression tests: minimum size guard and boot sequence responsiveness",
+      "description": "As a TUI developer, I need regression tests for the minimum size guard and boot sequence responsiveness to prevent future breakage.",
+      "phase": 15,
+      "priority": 2,
+      "dependsOn": [
+        "US-065",
+        "US-071"
+      ],
+      "acceptanceCriteria": [
+        "Test verifies 'terminal too small' message shown at 15x5, 10x10, 19x7",
+        "Test verifies normal UI renders at 20x8 (minimum size threshold)",
+        "Test verifies transition from too-small to normal on resize",
+        "Test verifies boot messages truncated at width 40",
+        "Test verifies boot sequence scrolling window at height 10 (fewer messages visible than total)",
+        "Test verifies boot skip works at 40x10",
+        "Added to app_test.go",
+        "go test ./internal/app/ -race passes",
+        "make check passes"
+      ],
+      "passes": false
+    }
+  ]
+}

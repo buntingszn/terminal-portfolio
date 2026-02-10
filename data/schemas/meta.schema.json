@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Site Metadata",
+  "description": "Global site metadata including identity, version, and connection details.",
+  "type": "object",
+  "required": [
+    "version",
+    "name",
+    "title",
+    "oneLiner",
+    "siteUrl",
+    "sshAddress",
+    "sourceRepo"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the data schema (e.g. \"1.0.0\").",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Full display name of the portfolio owner.",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "description": "Professional title or role (e.g. \"Software Engineer\").",
+      "minLength": 1
+    },
+    "oneLiner": {
+      "type": "string",
+      "description": "Short tagline displayed on the home screen.",
+      "minLength": 1
+    },
+    "siteUrl": {
+      "type": "string",
+      "description": "Public URL of the web portfolio.",
+      "format": "uri"
+    },
+    "sshAddress": {
+      "type": "string",
+      "description": "Public URL of the browser-based TUI portfolio (e.g. \"https://ssh.kpm.fyi\").",
+      "minLength": 1
+    },
+    "sourceRepo": {
+      "type": "string",
+      "description": "URL of the source code repository.",
+      "format": "uri"
+    }
+  }
+}
