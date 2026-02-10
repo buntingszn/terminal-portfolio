@@ -4,6 +4,6 @@
   "title": "Creative Engineer",
   "oneLiner": "Design-driven software, developer tools, and generative AI.",
   "siteUrl": "https://kpm.fyi",
-  "sshAddress": "ssh kpm.fyi -p 2222",
+  "sshAddress": "https://ssh.kpm.fyi",
   "sourceRepo": "https://github.com/buntingszn/terminal-portfolio"
 }
