@@ -78,6 +78,7 @@ type Link struct {
 	Label string `json:"label"`
 	URL   string `json:"url"`
 	Icon  string `json:"icon"`
+	Text  string `json:"text,omitempty"`
 }
 
 // Links holds the links list from links.json.

@@ -30,7 +30,7 @@ type Theme struct {
 var darkColors = Colors{
 	Bg:     lipgloss.Color("#0d0d0d"),
 	Fg:     lipgloss.Color("#c8c0b8"),
-	Accent: lipgloss.Color("#e05a33"),
+	Accent: lipgloss.Color("#e8536d"),
 	Muted:  lipgloss.Color("#555250"),
 	Border: lipgloss.Color("#2a2826"),
 }
@@ -38,7 +38,7 @@ var darkColors = Colors{
 var lightColors = Colors{
 	Bg:     lipgloss.Color("#f5f2ed"),
 	Fg:     lipgloss.Color("#1a1a1a"),
-	Accent: lipgloss.Color("#c44b2b"),
+	Accent: lipgloss.Color("#c93d57"),
 	Muted:  lipgloss.Color("#888580"),
 	Border: lipgloss.Color("#d4d0cb"),
 }

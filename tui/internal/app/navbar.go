@@ -4,17 +4,15 @@ import (
 	"fmt"
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
-// NavBar renders a horizontal tab navigation bar using box-drawing characters.
-// Active tab is styled with accent color; inactive tabs use muted color.
+// NavBar renders a horizontal tab navigation bar with plain text labels.
+// Active tab is styled with accent color + bold; inactive tabs use muted color.
 type NavBar struct {
 	theme  Theme
 	width  int
 	active Section
-	glow   TabGlow
 }
 
 // NewNavBar creates a NavBar with the given theme and terminal width.
@@ -22,26 +20,12 @@ func NewNavBar(theme Theme, width int) NavBar {
 	return NavBar{
 		theme: theme,
 		width: width,
-		glow:  NewTabGlow(theme),
 	}
 }
 
 // SetTheme updates the NavBar's theme.
 func (n *NavBar) SetTheme(theme Theme) {
 	n.theme = theme
-	n.glow.SetTheme(theme)
-}
-
-// StartGlow begins the tab glow pulse and returns the first tick command.
-func (n *NavBar) StartGlow() tea.Cmd {
-	return n.glow.Start()
-}
-
-// Update handles tabGlowTickMsg to advance the glow animation.
-func (n *NavBar) Update(msg tea.Msg) tea.Cmd {
-	var cmd tea.Cmd
-	n.glow, cmd = n.glow.Update(msg)
-	return cmd
 }
 
 // SetWidth updates the NavBar's width.
@@ -103,55 +87,25 @@ func navTabLabel(s Section, format navLabelFormat) string {
 	}
 }
 
-// View renders the navigation bar.
-// Layout adapts to width:
-//   - >= 40: ┌[1:home]─[2:work]─[3:cv]─[4:links]─────┐
-//   - 25-39: ┌[1:hm]─[2:wk]─[3:cv]─[4:lk]────────────┐
-//   - < 25:  ┌[1]─[2]─[3]─[4]─────────────────────────┐
+// View renders the navigation bar as plain text tabs with spacing.
+// Active tab is accent + bold; inactive tabs are muted.
 func (n NavBar) View() string {
 	accentStyle := lipgloss.NewStyle().Foreground(n.theme.Colors.Accent).Bold(true)
 	mutedStyle := lipgloss.NewStyle().Foreground(n.theme.Colors.Muted)
-	borderStyle := lipgloss.NewStyle().Foreground(n.theme.Colors.Border)
 
 	format := navLabelForWidth(n.width)
 
-	var tabs strings.Builder
-	tabsLen := 0
-
+	var tabs []string
 	for i := range SectionCount {
 		s := Section(i)
 		label := navTabLabel(s, format)
 
-		if i > 0 {
-			tabs.WriteString(borderStyle.Render(borderHorizontal))
-			tabsLen++
-		}
-
 		if s == n.active {
-			if n.glow.Active() {
-				glowColor := n.glow.BrightenedAccent()
-				glowStyle := lipgloss.NewStyle().Foreground(glowColor).Bold(true)
-				tabs.WriteString(glowStyle.Render("[" + label + "]"))
-			} else {
-				tabs.WriteString(accentStyle.Render("[" + label + "]"))
-			}
+			tabs = append(tabs, accentStyle.Render(label))
 		} else {
-			tabs.WriteString(mutedStyle.Render("[" + label + "]"))
+			tabs = append(tabs, mutedStyle.Render(label))
 		}
-		// +2 for the brackets
-		tabsLen += len(label) + 2
 	}
 
-	// Build the full bar: ┌ + tabs + fill + ┐
-	// ┌ = 1, ┐ = 1
-	fillLen := n.width - tabsLen - 2
-	if fillLen < 0 {
-		fillLen = 0
-	}
-
-	fill := strings.Repeat(borderHorizontal, fillLen)
-
-	return borderStyle.Render(borderTopLeft) +
-		tabs.String() +
-		borderStyle.Render(fill+borderTopRight)
+	return strings.Join(tabs, "  ")
 }

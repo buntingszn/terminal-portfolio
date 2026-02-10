@@ -21,6 +21,10 @@ const (
 	PaletteQuit
 	// PaletteHelp means show the help overlay.
 	PaletteHelp
+	// PaletteThemeLight means force light theme.
+	PaletteThemeLight
+	// PaletteThemeDark means force dark theme.
+	PaletteThemeDark
 )
 
 // PaletteResultMsg is sent when the command palette resolves a command.
@@ -130,14 +134,16 @@ func (p PaletteModel) execute() (PaletteModel, tea.Cmd) {
 	}
 
 	commands := map[string]commandDef{
-		"home":  {action: PaletteNavigate, section: SectionHome},
-		"work":  {action: PaletteNavigate, section: SectionWork},
-		"cv":    {action: PaletteNavigate, section: SectionCV},
-		"links": {action: PaletteNavigate, section: SectionLinks},
-		"theme": {action: PaletteTheme},
-		"quit":  {action: PaletteQuit},
-		"q":     {action: PaletteQuit},
-		"help":  {action: PaletteHelp},
+		"home":        {action: PaletteNavigate, section: SectionHome},
+		"work":        {action: PaletteNavigate, section: SectionWork},
+		"cv":          {action: PaletteNavigate, section: SectionCV},
+		"links":       {action: PaletteNavigate, section: SectionLinks},
+		"theme":       {action: PaletteTheme},
+		"theme light": {action: PaletteThemeLight},
+		"theme dark":  {action: PaletteThemeDark},
+		"quit":        {action: PaletteQuit},
+		"q":           {action: PaletteQuit},
+		"help":        {action: PaletteHelp},
 	}
 
 	if def, ok := commands[cmd]; ok {
@@ -218,7 +224,7 @@ func (p PaletteModel) View() string {
 	if p.err != "" {
 		infoLine = accentStyle.Render(p.err)
 	} else {
-		infoLine = mutedStyle.Render("home work cv links theme quit help")
+		infoLine = mutedStyle.Render("home work cv links theme [light|dark] quit help")
 	}
 	infoPad := innerWidth - lipgloss.Width(infoLine) + 1
 	if infoPad < 0 {
