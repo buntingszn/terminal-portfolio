@@ -11,8 +11,9 @@
     '#e8536d', // hot pink
   ]
 
-  function generateRandomColor(): string {
-    return RANDOM_PALETTE[Math.floor(Math.random() * RANDOM_PALETTE.length)]
+  function nextColor(current?: string): string {
+    const idx = current ? RANDOM_PALETTE.indexOf(current) : -1
+    return RANDOM_PALETTE[(idx + 1) % RANDOM_PALETTE.length]
   }
 
   function hexToRgb(hex: string): [number, number, number] {
@@ -68,7 +69,8 @@
   }
 
   function activateRandomMode() {
-    const bgHex = generateRandomColor()
+    const current = sessionStorage.getItem('random-bg') || undefined
+    const bgHex = nextColor(current)
     const tokens = deriveTokens(bgHex)
     applyRandomTokens(tokens)
     sessionStorage.setItem('random-mode', '1')
