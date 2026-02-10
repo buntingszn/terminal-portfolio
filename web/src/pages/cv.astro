@@ -37,7 +37,7 @@ const cv = getCv()
             {job.bullets.map((bullet) => (
               <li set:html={
                 bullet.replace(
-                  /\b(TypeScript|React|Next\.js|Hono|Astro|Go|Shell|Ruby on Rails|Elixir|ComfyUI|Flux|LoRA|CI\/CD|CMS|CMMS|RAG|LLM|SSH|AI)\b/g,
+                  /\b(TypeScript|React|Next\.js|Hono|Astro|Go|Shell|Ruby on Rails|Elixir|ComfyUI|Flux|LoRA|CI\/CD|CMS|CMMS|RAG|LLM|SSH|AI|Midjourney|Figma)\b/g,
                   '<code>$1</code>'
                 )
               } />
