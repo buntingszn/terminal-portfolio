@@ -47,7 +47,7 @@ ExecStart=/usr/bin/ttyd \
   --writable \
   --max-clients 50 \
   -t titleFixed="ssh.kpm.fyi" \
-  /usr/bin/ssh -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+  /usr/bin/ssh -t -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
     -o PreferredAuthentications=none visitor@127.0.0.1
 
 Restart=on-failure
