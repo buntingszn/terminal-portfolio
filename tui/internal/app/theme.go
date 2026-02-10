@@ -14,7 +14,6 @@ type Colors struct {
 // Theme holds colors and pre-built styles.
 type Theme struct {
 	Colors Colors
-	IsDark bool
 
 	// Pre-built styles
 	Title       lipgloss.Style
@@ -35,18 +34,9 @@ var darkColors = Colors{
 	Border: lipgloss.Color("#2a2826"),
 }
 
-var lightColors = Colors{
-	Bg:     lipgloss.Color("#f5f2ed"),
-	Fg:     lipgloss.Color("#1a1a1a"),
-	Accent: lipgloss.Color("#c93d57"),
-	Muted:  lipgloss.Color("#888580"),
-	Border: lipgloss.Color("#d4d0cb"),
-}
-
-func newTheme(colors Colors, isDark bool) Theme {
+func newTheme(colors Colors) Theme {
 	return Theme{
 		Colors:      colors,
-		IsDark:      isDark,
 		Title:       lipgloss.NewStyle().Foreground(colors.Accent).Bold(true),
 		Body:        lipgloss.NewStyle().Foreground(colors.Fg),
 		Accent:      lipgloss.NewStyle().Foreground(colors.Accent),
@@ -60,18 +50,5 @@ func newTheme(colors Colors, isDark bool) Theme {
 
 // DarkTheme returns the dark theme.
 func DarkTheme() Theme {
-	return newTheme(darkColors, true)
-}
-
-// LightTheme returns the light theme.
-func LightTheme() Theme {
-	return newTheme(lightColors, false)
-}
-
-// Toggle returns the opposite theme.
-func (t Theme) Toggle() Theme {
-	if t.IsDark {
-		return LightTheme()
-	}
-	return DarkTheme()
+	return newTheme(darkColors)
 }

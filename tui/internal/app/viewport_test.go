@@ -353,32 +353,21 @@ func TestViewWithScrollbarLineCount(t *testing.T) {
 	}
 }
 
-func TestViewWithScrollbarWorksWithBothThemes(t *testing.T) {
-	themes := []struct {
-		name  string
-		theme Theme
-	}{
-		{"dark", DarkTheme()},
-		{"light", LightTheme()},
+func TestViewWithScrollbarWorksWithDarkTheme(t *testing.T) {
+	theme := DarkTheme()
+	vp := NewViewport(40, 5)
+	lines := make([]string, 20)
+	for i := range lines {
+		lines[i] = "content"
 	}
+	vp.SetContent(strings.Join(lines, "\n"))
 
-	for _, tt := range themes {
-		t.Run(tt.name, func(t *testing.T) {
-			vp := NewViewport(40, 5)
-			lines := make([]string, 20)
-			for i := range lines {
-				lines[i] = "content"
-			}
-			vp.SetContent(strings.Join(lines, "\n"))
-
-			result := vp.ViewWithScrollbar(tt.theme)
-			if result == "" {
-				t.Errorf("ViewWithScrollbar with %s theme returned empty", tt.name)
-			}
-			if !strings.Contains(result, scrollThumbChar) {
-				t.Errorf("ViewWithScrollbar with %s theme missing thumb char", tt.name)
-			}
-		})
+	result := vp.ViewWithScrollbar(theme)
+	if result == "" {
+		t.Error("ViewWithScrollbar with dark theme returned empty")
+	}
+	if !strings.Contains(result, scrollThumbChar) {
+		t.Error("ViewWithScrollbar with dark theme missing thumb char")
 	}
 }
 

@@ -46,11 +46,6 @@ func NewStatusBar(theme Theme, width int) StatusBar {
 	}
 }
 
-// SetTheme updates the status bar's theme.
-func (s *StatusBar) SetTheme(theme Theme) {
-	s.theme = theme
-}
-
 // SetWidth updates the status bar's width.
 func (s *StatusBar) SetWidth(width int) {
 	s.width = width

@@ -39,8 +39,3 @@ type FocusMsg struct{}
 
 // BlurMsg is sent to a section when it loses focus.
 type BlurMsg struct{}
-
-// ThemeChangedMsg is sent when the theme is toggled.
-type ThemeChangedMsg struct {
-	Theme Theme
-}

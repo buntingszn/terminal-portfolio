@@ -189,12 +189,6 @@ func (m *IntroModel) SetSize(width, height int) {
 	m.height = height
 }
 
-// SetTheme updates the intro model's theme.
-func (m *IntroModel) SetTheme(theme Theme) {
-	m.theme = theme
-	m.cursor.SetTheme(theme)
-}
-
 // truncateBootMsg truncates text to fit within maxWidth, adding an ellipsis
 // when truncation occurs.
 func truncateBootMsg(text string, maxWidth int) string {

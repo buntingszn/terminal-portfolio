@@ -98,17 +98,6 @@ func TestRenderCardMultilineContent(t *testing.T) {
 	}
 }
 
-func TestRenderCardLightTheme(t *testing.T) {
-	theme := LightTheme()
-	out := RenderCard(theme, "Title", "Content", 30)
-	if !strings.Contains(out, "Title") {
-		t.Error("RenderCard with light theme should contain title")
-	}
-	if !strings.Contains(out, "Content") {
-		t.Error("RenderCard with light theme should contain content")
-	}
-}
-
 func TestRenderCardLongTitle(t *testing.T) {
 	// Title is 54 chars. With width=20, innerWidth=16.
 	// Title (54) > innerWidth (16), so truncate to 13 chars + "..." = 16.

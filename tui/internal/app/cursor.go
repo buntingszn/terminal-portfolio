@@ -68,11 +68,6 @@ func (c Cursor) Tick() tea.Cmd {
 	return c.tick()
 }
 
-// SetTheme updates the cursor's style to use the new theme's accent color.
-func (c *Cursor) SetTheme(theme Theme) {
-	c.style = lipgloss.NewStyle().Foreground(theme.Colors.Accent)
-}
-
 // tick returns a tea.Cmd that fires a cursorBlinkMsg after the configured interval.
 func (c Cursor) tick() tea.Cmd {
 	id := c.id

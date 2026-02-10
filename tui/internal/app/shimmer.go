@@ -128,12 +128,6 @@ func (s Shimmer) Update(msg tea.Msg) (Shimmer, tea.Cmd) {
 	return s, nil
 }
 
-// SetTheme updates the shimmer lightness values from the theme.
-func (s *Shimmer) SetTheme(theme Theme) {
-	s.baseL = shimmerLightness(theme.Colors.Muted)
-	s.peakL = shimmerLightness(theme.Colors.Fg)
-}
-
 // Render applies the shimmer to text, returning per-character styled output.
 // textWidth is the number of columns in the widest line.
 func (s Shimmer) Render(text string, textWidth int) string {

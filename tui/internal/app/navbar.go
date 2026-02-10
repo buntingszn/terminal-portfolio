@@ -23,11 +23,6 @@ func NewNavBar(theme Theme, width int) NavBar {
 	}
 }
 
-// SetTheme updates the NavBar's theme.
-func (n *NavBar) SetTheme(theme Theme) {
-	n.theme = theme
-}
-
 // SetWidth updates the NavBar's width.
 func (n *NavBar) SetWidth(width int) {
 	n.width = width

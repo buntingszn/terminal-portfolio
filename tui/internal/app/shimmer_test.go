@@ -113,16 +113,6 @@ func TestShimmerRenderZeroWidth(t *testing.T) {
 	}
 }
 
-func TestShimmerSetTheme(t *testing.T) {
-	s := NewShimmer("test", DarkTheme())
-	darkPeakL := s.peakL
-	s.SetTheme(LightTheme())
-	// Dark Fg L* (~0.79) vs light Fg L* (~0.11) — clearly different.
-	if s.peakL == darkPeakL {
-		t.Error("SetTheme should update peak lightness")
-	}
-}
-
 func TestShimmerBrightnessAtVariation(t *testing.T) {
 	s := NewShimmer("test", DarkTheme())
 	s.Start()
