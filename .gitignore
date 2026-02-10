@@ -33,6 +33,9 @@ coverage/
 *.cover
 *.out
 
+# Claude Code
+CLAUDE.md
+
 # Misc
 *.log
 tmp/
