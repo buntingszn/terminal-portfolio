@@ -35,6 +35,7 @@ coverage/
 
 # Docs (private deployment notes, Claude Code context)
 *.md
+!README.md
 
 # Misc
 *.log
