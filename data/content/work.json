@@ -9,11 +9,11 @@
       "featured": true
     },
     {
-      "title": "CC Notify",
+      "title": "Holler",
       "description": "Self-hosted push notifications for AI coding agents. Supports Bark (E2EE via APNs) and ntfy, with hooks for Claude Code, Cursor, Gemini CLI, and more.",
       "tags": ["shell", "E2EE", "APNs", "hooks"],
       "url": "",
-      "repo": "https://github.com/buntingszn/cc-notify",
+      "repo": "https://github.com/buntingszn/holler",
       "featured": true
     },
     {
