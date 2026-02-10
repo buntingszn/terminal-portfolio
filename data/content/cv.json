@@ -14,7 +14,7 @@
         "Ship full-stack TypeScript applications (React, Next.js, Astro, Hono) for small business and creative clients; migrated multiple WordPress sites to static architectures with CI/CD pipelines",
         "Built generative AI image and video pipelines with custom LoRA models using ComfyUI and Flux; batch-processed 500+ commercial assets on local hardware for creative professionals",
         "Design RAG systems and LLM API integrations for retrieval and automation use cases",
-        "Build open-source developer tools in Go and Shell (CC Notify, terminal-portfolio); SSH-accessible TUI portfolio and push notification hooks for AI coding agents",
+        "Build open-source developer tools in Go and Shell (Holler, terminal-portfolio); SSH-accessible TUI portfolio and push notification hooks for AI coding agents",
         "Designed brand identities, marketing collateral, and web experiences for small business and startup clients across a 15-year creative practice",
         "Developed AI-assisted creative workflows for character development, image generation, and video production using Midjourney, ComfyUI, and Flux"
       ]
@@ -49,23 +49,59 @@
     },
     {
       "category": "Frontend",
-      "items": ["React", "Next.js", "Astro", "TanStack", "Tailwind CSS", "shadcn/ui"]
+      "items": [
+        "React",
+        "Next.js",
+        "Astro",
+        "TanStack",
+        "Tailwind CSS",
+        "shadcn/ui"
+      ]
     },
     {
       "category": "Backend",
-      "items": ["Node.js", "Hono", "Drizzle", "Zod", "REST APIs", "PostgreSQL", "SQLite"]
+      "items": [
+        "Node.js",
+        "Hono",
+        "Drizzle",
+        "Zod",
+        "REST APIs",
+        "PostgreSQL",
+        "SQLite"
+      ]
     },
     {
       "category": "AI",
-      "items": ["RAG", "OpenAI/Anthropic APIs", "Agentic workflows", "ComfyUI", "Flux", "LoRA fine-tuning"]
+      "items": [
+        "RAG",
+        "OpenAI/Anthropic APIs",
+        "Agentic workflows",
+        "ComfyUI",
+        "Flux",
+        "LoRA fine-tuning"
+      ]
     },
     {
       "category": "Design",
-      "items": ["Figma", "Photoshop", "Illustrator", "Midjourney", "Brand Identity", "Typography"]
+      "items": [
+        "Figma",
+        "Photoshop",
+        "Illustrator",
+        "Midjourney",
+        "Brand Identity",
+        "Typography"
+      ]
     },
     {
       "category": "Platforms",
-      "items": ["Vercel", "Cloudflare", "AWS", "Docker", "Linux", "GitHub Actions"]
+      "items": [
+        "Vercel",
+        "Cloudflare",
+        "AWS",
+        "Docker",
+        "Linux",
+        "GitHub Actions"
+      ]
     },
     {
       "category": "Tools",
