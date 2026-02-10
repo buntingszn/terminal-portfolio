@@ -1,0 +1,7 @@
+{
+  "name": "terminal-portfolio",
+  "compatibility_date": "2026-02-10",
+  "assets": {
+    "directory": "./web/dist"
+  }
+}
