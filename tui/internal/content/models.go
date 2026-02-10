@@ -21,8 +21,9 @@ type Education struct {
 // About holds bio and personal info from about.json.
 type About struct {
 	Bio       string      `json:"bio"`
-	Location  string      `json:"location"`
 	Status    string      `json:"status"`
+	Email     string      `json:"email"`
+	CLI       string      `json:"cli"`
 	Education []Education `json:"education"`
 	Interests []string    `json:"interests,omitempty"`
 }

@@ -43,7 +43,7 @@ fi
 declare -A REQUIRED_FIELDS
 REQUIRED_FIELDS=(
   ["meta.json"]="version name title oneLiner siteUrl sshAddress sourceRepo"
-  ["about.json"]="bio location status education"
+  ["about.json"]="bio status email cli"
   ["work.json"]="projects"
   ["cv.json"]="contact summary experience skills education"
   ["links.json"]="links"
