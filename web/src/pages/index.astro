@@ -24,7 +24,7 @@ const about = getAbout()
           <div class="details">
             <p><span class="label">Status:</span> {about.status}</p>
             <p><span class="label">Email:</span> <a href={`mailto:${about.email}`}>{about.email}</a></p>
-            <p><span class="label">CLI:</span> {about.cli}</p>
+            <p><span class="label">CLI:</span> <a href={meta.sshAddress} target="_blank" rel="noopener noreferrer">{about.cli}</a></p>
           </div>
         </div>
       </div>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    .bg { fill: #0d0d0d; }
+    .prompt { fill: #e8536d; stroke: #e8536d; }
+    @media (prefers-color-scheme: light) {
+      .bg { fill: #f5f2ed; }
+      .prompt { fill: #c93d57; stroke: #c93d57; }
+    }
+  </style>
+  <rect class="bg" width="32" height="32" rx="6"/>
+  <path class="prompt" d="M6 22 L14 16 L6 10" fill="none" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect class="prompt" x="17" y="20" width="10" height="3" rx="1" stroke="none"/>
+</svg>
