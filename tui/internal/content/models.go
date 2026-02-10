@@ -46,7 +46,7 @@ type Work struct {
 type CVContact struct {
 	Email    string `json:"email"`
 	Location string `json:"location"`
-	Website  string `json:"website"`
+	Website  string `json:"website,omitempty"`
 }
 
 // CVExperience represents a work experience entry.

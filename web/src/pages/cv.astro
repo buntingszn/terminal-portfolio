@@ -16,7 +16,7 @@ const cv = getCv()
     <div class="header">
       <span class="name">{meta.name}</span>
       <p class="contact">
-        {cv.contact.email} &middot; {cv.contact.location} &middot; <a href={cv.contact.website}>{cv.contact.website}</a>
+        <a href={`mailto:${cv.contact.email}`}>{cv.contact.email}</a> &middot; {cv.contact.location}
       </p>
       <p class="summary">{cv.summary}</p>
     </div>
