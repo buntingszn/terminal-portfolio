@@ -285,44 +285,10 @@ func (h *HomeSection) renderNeofetch(about content.About, contentWidth int) stri
 		lines = append(lines, infoBlock)
 	}
 
-	// Join portrait and right column line-by-line to preserve OSC 8
-	// hyperlink sequences. lipgloss.JoinHorizontal splits lines and
-	// inserts padding that breaks escape sequences spanning a line.
-	pLines := strings.Split(styledP, "\n")
-	rLines := strings.Split(strings.Join(lines, "\n"), "\n")
+	rightBlock := strings.Join(lines, "\n")
+	gapStr := strings.Repeat(" ", gap)
 
-	padWidth := portraitWidth + gap
-	total := len(pLines)
-	if len(rLines) > total {
-		total = len(rLines)
-	}
-
-	// Vertically center the shorter column.
-	pOff := 0
-	rOff := 0
-	if len(pLines) < total {
-		pOff = (total - len(pLines)) / 2
-	}
-	if len(rLines) < total {
-		rOff = (total - len(rLines)) / 2
-	}
-
-	pad := strings.Repeat(" ", padWidth)
-	joined := make([]string, total)
-	for i := range total {
-		left := pad
-		if pi := i - pOff; pi >= 0 && pi < len(pLines) {
-			line := pLines[pi]
-			left = line + strings.Repeat(" ", padWidth-lipgloss.Width(line))
-		}
-		right := ""
-		if ri := i - rOff; ri >= 0 && ri < len(rLines) {
-			right = rLines[ri]
-		}
-		joined[i] = left + right
-	}
-
-	return strings.Join(joined, "\n")
+	return lipgloss.JoinHorizontal(lipgloss.Center, styledP, gapStr, rightBlock)
 }
 
 // renderStacked renders the vertically-stacked layout for narrow terminals.
@@ -362,10 +328,11 @@ func (h *HomeSection) renderInfo(about content.About) string {
 		))
 	}
 	if about.Email != "" {
+		emailLink := app.RenderHyperlink("mailto:"+about.Email, valueStyle.Render(about.Email))
 		lines = append(lines, fmt.Sprintf(
 			"%s %s",
 			labelStyle.Render("Email"),
-			valueStyle.Render(about.Email),
+			emailLink,
 		))
 	}
 	if siteURL := h.content.Meta.SiteURL; siteURL != "" {
