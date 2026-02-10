@@ -313,7 +313,7 @@ func (h *HomeSection) renderStacked(about content.About, contentWidth int) strin
 	return strings.Join(sections, sep)
 }
 
-// renderInfo renders status, email, and web URL with accent-colored labels.
+// renderInfo renders status, email, and CLI with accent-colored labels.
 func (h *HomeSection) renderInfo(about content.About) string {
 	var lines []string
 
@@ -328,20 +328,17 @@ func (h *HomeSection) renderInfo(about content.About) string {
 		))
 	}
 	if about.Email != "" {
-		emailLink := app.RenderHyperlink("mailto:"+about.Email, valueStyle.Render(about.Email))
 		lines = append(lines, fmt.Sprintf(
 			"%s %s",
 			labelStyle.Render("Email"),
-			emailLink,
+			valueStyle.Render(about.Email),
 		))
 	}
-	if siteURL := h.content.Meta.SiteURL; siteURL != "" {
-		display := strings.TrimPrefix(siteURL, "https://")
-		webLink := app.RenderHyperlink(siteURL, valueStyle.Render(display))
+	if about.CLI != "" {
 		lines = append(lines, fmt.Sprintf(
 			"%s %s",
-			labelStyle.Render("Web"),
-			webLink,
+			labelStyle.Render("CLI"),
+			valueStyle.Render(about.CLI),
 		))
 	}
 
