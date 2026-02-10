@@ -25,6 +25,9 @@ Thumbs.db
 # Go
 tui/vendor/
 
+# SSH host keys (auto-generated)
+tui/.ssh/
+
 # Testing
 coverage/
 *.cover

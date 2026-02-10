@@ -1,0 +1,78 @@
+# ttyd-portfolio.service
+# Systemd unit file for the ttyd web terminal bridge.
+#
+# This service runs ttyd, which provides a web-based terminal that connects
+# to the Terminal Portfolio SSH server. It bridges HTTP (for Cloudflare Tunnel)
+# to the Wish SSH server on localhost.
+#
+# Architecture: visitor -> CF edge (ssh.kpm.fyi) -> tunnel -> ttyd (:7681) -> SSH (:2222)
+#
+# ============================================================================
+# Installation Steps:
+# ============================================================================
+#
+# 1. Install ttyd:
+#
+#      sudo dnf install -y ttyd
+#
+# 2. Ensure terminal-portfolio.service is installed and running.
+#
+# 3. Install this unit file:
+#
+#      sudo cp deploy/ttyd-portfolio.service /etc/systemd/system/
+#      sudo systemctl daemon-reload
+#
+# 4. Enable and start:
+#
+#      sudo systemctl enable --now ttyd-portfolio.service
+#
+# 5. Check status:
+#
+#      sudo systemctl status ttyd-portfolio.service
+#      sudo journalctl -u ttyd-portfolio.service -f
+#
+# ============================================================================
+# DO NOT open port 7681 in the firewall. Access is tunnel-only.
+# ============================================================================
+
+[Unit]
+Description=ttyd web terminal for Terminal Portfolio
+After=terminal-portfolio.service
+Requires=terminal-portfolio.service
+
+[Service]
+ExecStart=/usr/bin/ttyd \
+  --port 7681 \
+  --interface 127.0.0.1 \
+  --writable \
+  --max-clients 50 \
+  /usr/bin/ssh -p 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+    -o PreferredAuthentications=none visitor@127.0.0.1
+
+Restart=on-failure
+RestartSec=5
+
+# Run as dedicated user (not root)
+User=terminal-portfolio
+Group=terminal-portfolio
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectClock=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+
+# Log output goes to the journal.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ttyd-portfolio
+
+[Install]
+WantedBy=multi-user.target

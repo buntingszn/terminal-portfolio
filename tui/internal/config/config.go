@@ -9,6 +9,7 @@ import (
 
 // Config holds the application configuration.
 type Config struct {
+	SSHHost     string
 	SSHPort     int
 	DataDir     string
 	MaxSessions int
@@ -22,11 +23,16 @@ type Config struct {
 // with sensible defaults.
 func Load() (*Config, error) {
 	cfg := &Config{
+		SSHHost:     "0.0.0.0",
 		SSHPort:     2222,
 		DataDir:     "../data",
 		MaxSessions: 100,
 		IdleTimeout: 30 * time.Minute,
 		Debug:       false,
+	}
+
+	if v := os.Getenv("TERMINAL_PORTFOLIO_SSH_HOST"); v != "" {
+		cfg.SSHHost = v
 	}
 
 	if v := os.Getenv("TERMINAL_PORTFOLIO_SSH_PORT"); v != "" {
