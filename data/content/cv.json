@@ -1,0 +1,87 @@
+{
+  "contact": {
+    "email": "hi@kpm.fyi",
+    "location": "Nashville, TN"
+  },
+  "summary": "Creative engineer with 15 years of experience spanning brand design, full-stack development, and generative AI. Founder of Gravity Plan, a creative engineering practice shipping design-driven software, developer tools, and AI-augmented creative workflows.",
+  "experience": [
+    {
+      "company": "Gravity Plan",
+      "role": "Founder & Creative Engineer",
+      "start": "2011",
+      "end": "Present",
+      "bullets": [
+        "Ship full-stack TypeScript applications (React, Next.js, Astro, Hono) for small business and creative clients; migrated multiple WordPress sites to static architectures with CI/CD pipelines",
+        "Built generative AI image and video pipelines with custom LoRA models using ComfyUI and Flux; batch-processed 500+ commercial assets on local hardware for creative professionals",
+        "Design RAG systems and LLM API integrations for retrieval and automation use cases",
+        "Build open-source developer tools in Go and Shell (CC Notify, terminal-portfolio); SSH-accessible TUI portfolio and push notification hooks for AI coding agents",
+        "Designed brand identities, marketing collateral, and web experiences for small business and startup clients across a 15-year creative practice",
+        "Developed AI-assisted creative workflows for character development, image generation, and video production using Midjourney, ComfyUI, and Flux"
+      ]
+    },
+    {
+      "company": "FortyAU",
+      "role": "Senior Software Engineer",
+      "start": "2015",
+      "end": "2021",
+      "bullets": [
+        "Full-stack development of 15+ startup MVPs and enterprise applications across React, Ruby on Rails, and Elixir for clients in healthcare, hospitality, finance, and entertainment industries",
+        "Architected a CMMS platform and reporting dashboards deployed across all facilities of a major healthcare enterprise operating 190 hospitals and 2,400+ care sites in 20 U.S. states and the U.K.",
+        "Established automated testing and CI/CD pipelines across client engagements",
+        "Mentored junior developers and led architecture decisions across multiple client projects"
+      ]
+    },
+    {
+      "company": "Strategic Marketing Solutions",
+      "role": "Software Developer",
+      "start": "2013",
+      "end": "2015",
+      "bullets": [
+        "Developed WordPress sites and custom plugins for small business clients",
+        "Managed client projects end-to-end from requirements through delivery and training"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "category": "Languages",
+      "items": ["TypeScript", "Go", "Python", "Ruby", "Bash"]
+    },
+    {
+      "category": "Frontend",
+      "items": ["React", "Next.js", "Astro", "TanStack", "Tailwind CSS", "shadcn/ui"]
+    },
+    {
+      "category": "Backend",
+      "items": ["Node.js", "Hono", "Drizzle", "Zod", "REST APIs", "PostgreSQL", "SQLite"]
+    },
+    {
+      "category": "AI",
+      "items": ["RAG", "OpenAI/Anthropic APIs", "Agentic workflows", "ComfyUI", "Flux", "LoRA fine-tuning"]
+    },
+    {
+      "category": "Design",
+      "items": ["Figma", "Photoshop", "Illustrator", "Midjourney", "Brand Identity", "Typography"]
+    },
+    {
+      "category": "Platforms",
+      "items": ["Vercel", "Cloudflare", "AWS", "Docker", "Linux", "GitHub Actions"]
+    },
+    {
+      "category": "Tools",
+      "items": ["Git", "pnpm", "Vite", "Vitest", "Playwright"]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Nashville Software School",
+      "degree": "Full-Stack Web Development",
+      "year": "2015"
+    },
+    {
+      "institution": "Middle Tennessee State University",
+      "degree": "Music Business",
+      "year": "2011"
+    }
+  ]
+}

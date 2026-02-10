@@ -1,0 +1,36 @@
+{
+  "projects": [
+    {
+      "title": "Terminal Portfolio",
+      "description": "A portfolio you can browse over SSH. Bubbletea TUI served via Wish, with an Astro static site as the web counterpart. Both render from shared JSON data.",
+      "tags": ["go", "typescript", "astro", "bubbletea", "wish", "ssh"],
+      "url": "https://kpm.fyi",
+      "repo": "https://github.com/buntingszn/terminal-portfolio",
+      "featured": true
+    },
+    {
+      "title": "CC Notify",
+      "description": "Self-hosted push notifications for AI coding agents. Supports Bark (E2EE via APNs) and ntfy, with hooks for Claude Code, Cursor, Gemini CLI, and more.",
+      "tags": ["shell", "E2EE", "APNs", "hooks"],
+      "url": "",
+      "repo": "https://github.com/buntingszn/cc-notify",
+      "featured": true
+    },
+    {
+      "title": "Hoodwink",
+      "description": "Chrome extension that overlays the Zillow.com map with real crime incident GeoJSON data for the Nashville area.",
+      "tags": ["chrome-extension", "geojson", "javascript"],
+      "url": "",
+      "repo": "",
+      "featured": true
+    },
+    {
+      "title": "Cookt",
+      "description": "Recipe manager with a Python backend powered by local models for recipe generation, TTS/STT voice assistance, and OCR recipe capture from photos.",
+      "tags": ["python", "local-models", "tts", "ocr"],
+      "url": "",
+      "repo": "https://github.com/buntingszn/cookt",
+      "featured": true
+    }
+  ]
+}

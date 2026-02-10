@@ -1,0 +1,108 @@
+{
+  "contact": {
+    "email": "hi@kpm.fyi",
+    "location": "Nashville, TN"
+  },
+  "summary": "Full-stack software engineer with 10 years of experience shipping web applications, developer tools, and AI-augmented workflows. TypeScript, Go, Python. Modern frontend stacks, edge deployments, and generative AI pipelines.",
+  "experience": [
+    {
+      "company": "Independent",
+      "role": "Software Engineer",
+      "start": "2021",
+      "end": "Present",
+      "bullets": [
+        "Ship full-stack TypeScript applications with React, Next.js, Hono, and Astro; migrate clients off legacy CMS platforms",
+        "Build generative AI pipelines (ComfyUI, Flux, etc) with custom LoRA training for commercial image and video production",
+        "Design RAG systems, LLM API integrations, and agentic workflows for retrieval and automation use cases",
+        "Build open-source developer tools in Go and Shell, including AI agent notification systems and SSH-accessible terminal UIs"
+      ]
+    },
+    {
+      "company": "FortyAU",
+      "role": "Senior Software Developer",
+      "start": "2015",
+      "end": "2021",
+      "bullets": [
+        "Led full-stack development of startup MVPs and enterprise applications across React, Ruby on Rails, and Elixir",
+        "Architected CMMS systems, reporting dashboards, and internal tools for enterprise clients",
+        "Established automated testing and CI/CD pipelines",
+        "Mentored developers and led architecture decisions for client projects"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "category": "Languages",
+      "items": ["TypeScript", "Go", "Python", "Rust", "Bash"]
+    },
+    {
+      "category": "Frontend",
+      "items": [
+        "React",
+        "Next.js",
+        "Astro",
+        "TanStack",
+        "Tailwind CSS",
+        "shadcn/ui"
+      ]
+    },
+    {
+      "category": "Backend",
+      "items": [
+        "Hono",
+        "Drizzle",
+        "Zod",
+        "REST APIs",
+        "gRPC",
+        "SQLite",
+        "PostgreSQL"
+      ]
+    },
+    {
+      "category": "AI / ML",
+      "items": [
+        "RAG",
+        "LLM APIs",
+        "Agentic workflows",
+        "ComfyUI",
+        "Flux",
+        "LoRA training"
+      ]
+    },
+    {
+      "category": "Platforms",
+      "items": [
+        "Vercel",
+        "Cloudflare",
+        "AWS",
+        "Docker",
+        "Linux",
+        "GitHub Actions"
+      ]
+    },
+    {
+      "category": "Tools",
+      "items": [
+        "Git",
+        "Vite",
+        "Vitest",
+        "Playwright",
+        "Neovim",
+        "tmux",
+        "Claude Code"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Nashville Software School",
+      "degree": "Full-Stack Web Development",
+      "year": "2015"
+    },
+    {
+      "institution": "Middle Tennessee State University",
+      "degree": "Music Business",
+      "year": "2011"
+    }
+  ]
+}

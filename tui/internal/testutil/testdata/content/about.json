@@ -1,0 +1,13 @@
+{
+  "bio": "Kyle McCormick is a software engineer focused on web applications, developer tooling, and AI-augmented workflows.",
+  "status": "Open to opportunities",
+  "email": "hi@kpm.fyi",
+  "cli": "ssh.kpm.fyi",
+  "education": [
+    {
+      "institution": "Nashville Software School",
+      "degree": "Full-Stack Web Development",
+      "year": "2015"
+    }
+  ]
+}

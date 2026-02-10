@@ -1,0 +1,15 @@
+{
+  "links": [
+    {
+      "label": "GitHub",
+      "url": "https://github.com/buntingszn",
+      "icon": "github"
+    },
+    { "label": "Email", "url": "mailto:hi@kpm.fyi", "icon": "mail" },
+    {
+      "label": "LinkedIn",
+      "url": "https://linkedin.com/in/kylepmccormick",
+      "icon": "linkedin"
+    }
+  ]
+}

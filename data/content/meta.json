@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0",
+  "name": "Kyle McCormick",
+  "title": "Creative Engineer",
+  "oneLiner": "Design-driven software, developer tools, and generative AI.",
+  "siteUrl": "https://kpm.fyi",
+  "sshAddress": "ssh kpm.fyi -p 2222",
+  "sourceRepo": "https://github.com/buntingszn/terminal-portfolio"
+}
