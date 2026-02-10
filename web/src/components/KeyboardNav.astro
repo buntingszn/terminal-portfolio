@@ -109,7 +109,17 @@
     const current = window.location.pathname.replace(/\/$/, '') || '/'
     const idx = pages.indexOf(current)
 
+    const pc = document.querySelector('.page-content')
+
     switch (e.key) {
+      case 'ArrowUp':
+      case 'k':
+        if (pc) pc.scrollTop -= 60
+        break
+      case 'ArrowDown':
+      case 'j':
+        if (pc) pc.scrollTop += 60
+        break
       case 'ArrowLeft':
         if (idx > 0) window.location.href = pages[idx - 1]
         break
