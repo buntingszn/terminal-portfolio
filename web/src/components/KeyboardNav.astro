@@ -1,6 +1,6 @@
 ---
 // Global keyboard navigation handler
-// j/k: scroll, 1-4: page nav, t: theme toggle, r: random color, ?: help, :: command bar
+// j/k: scroll, 1-4: page nav, t: theme toggle, c: random color, ?: help, :: command bar
 ---
 
 <script>
@@ -76,7 +76,7 @@
     sessionStorage.setItem('random-mode', '1')
     sessionStorage.setItem('random-bg', bgHex)
     const icon = document.querySelector('#theme-toggle .theme-icon')
-    if (icon) icon.textContent = '[ random ]'
+    if (icon) icon.textContent = 'random'
     document.dispatchEvent(new CustomEvent('random-theme-changed'))
   }
 
@@ -88,7 +88,7 @@
       (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
     document.documentElement.setAttribute('data-theme', theme)
     const icon = document.querySelector('#theme-toggle .theme-icon')
-    if (icon) icon.textContent = theme === 'dark' ? '[ light ]' : '[ dark ]'
+    if (icon) icon.textContent = theme === 'dark' ? 'light' : 'dark'
     document.dispatchEvent(new CustomEvent('random-theme-changed'))
   }
 
@@ -128,7 +128,7 @@
       case '4':
         window.location.href = '/links'
         break
-      case 'r':
+      case 'c':
         activateRandomMode()
         break
       case 't': {
@@ -142,7 +142,7 @@
         localStorage.setItem('theme', next)
         const icon = document.querySelector('#theme-toggle .theme-icon')
         if (icon) {
-          icon.textContent = next === 'dark' ? '[ light ]' : '[ dark ]'
+          icon.textContent = next === 'dark' ? 'light' : 'dark'
         }
         break
       }

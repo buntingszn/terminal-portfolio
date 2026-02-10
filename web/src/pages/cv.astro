@@ -193,6 +193,12 @@ const cv = getCv()
     background-color: var(--border);
   }
 
+  @media (hover: none) {
+    .entry li :global(code) {
+      background-color: var(--border);
+    }
+  }
+
   /* Accent dates — right-aligned */
   .date {
     color: var(--accent);

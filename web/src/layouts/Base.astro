@@ -228,6 +228,29 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
         document.addEventListener('astro:after-swap', forwardScroll)
       })()
     </script>
+    <script is:inline>
+      ;(function () {
+        if (window.matchMedia('(hover: hover)').matches) return
+        const pages = ['/', '/work', '/cv', '/links']
+        let startX = 0
+        let startY = 0
+        document.addEventListener('touchstart', function (e) {
+          startX = e.touches[0].clientX
+          startY = e.touches[0].clientY
+        }, { passive: true })
+        document.addEventListener('touchend', function (e) {
+          const dx = e.changedTouches[0].clientX - startX
+          const dy = e.changedTouches[0].clientY - startY
+          if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx)) return
+          const path = window.location.pathname.replace(/\/$/, '') || '/'
+          const idx = pages.indexOf(path)
+          if (idx < 0) return
+          const next = dx < 0 ? idx + 1 : idx - 1
+          if (next < 0 || next >= pages.length) return
+          window.location.href = pages[next]
+        }, { passive: true })
+      })()
+    </script>
   </body>
 </html>
 
@@ -311,6 +334,17 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
 
   .page-content.scrolled-bottom .scroll-fade {
     opacity: 0;
+  }
+
+  @media (max-width: 640px) {
+    body {
+      padding: 1rem;
+    }
+
+    .page-content .scroll-fade {
+      height: 3rem;
+      margin-top: -3rem;
+    }
   }
 
   @media (min-width: 768px) {

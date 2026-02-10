@@ -157,6 +157,12 @@ const sorted = [...projects].sort((a, b) => Number(b.featured) - Number(a.featur
     color: var(--muted);
   }
 
+  @media (hover: none) {
+    .tags {
+      opacity: 1;
+    }
+  }
+
   .ralph-egg {
     position: fixed;
     bottom: -200px;

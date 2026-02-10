@@ -23,3 +23,10 @@ body::after {
     display: none;
   }
 }
+
+/* Disable scanlines on mobile (moiré on high-DPI) */
+@media (max-width: 640px) {
+  body::after {
+    display: none;
+  }
+}

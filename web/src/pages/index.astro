@@ -22,8 +22,9 @@ const about = getAbout()
           <p>{about.bio}</p>
 
           <div class="details">
-            <p><span class="label">Location:</span> {about.location}</p>
             <p><span class="label">Status:</span> {about.status}</p>
+            <p><span class="label">Email:</span> <a href={`mailto:${about.email}`}>{about.email}</a></p>
+            <p><span class="label">CLI:</span> {about.cli}</p>
           </div>
         </div>
       </div>
@@ -115,6 +116,11 @@ const about = getAbout()
     margin-bottom: 0.25rem;
   }
 
+  .details a {
+    color: var(--fg);
+    text-decoration: none;
+  }
+
   .label {
     color: var(--accent);
     font-weight: 700;
@@ -136,6 +142,17 @@ const about = getAbout()
   @media (max-width: 640px) {
     .about-content {
       flex-direction: column;
+      gap: 1rem;
+    }
+
+    .about-content :global(.home-portrait) {
+      font-size: 0.22rem;
+    }
+  }
+
+  @media (max-width: 375px) {
+    .about-content :global(.home-portrait) {
+      font-size: 0.18rem;
     }
   }
 </style>

@@ -1,4 +1,6 @@
 ---
+import ThemeToggle from './ThemeToggle.astro'
+
 interface Props {
   left?: string
   center?: string
@@ -11,7 +13,10 @@ const { left = '', center = '', right = '' } = Astro.props
 <footer class="status-bar" aria-label="Status bar">
   <span class="zone left">{left}</span>
   <span class="zone center">{center}</span>
-  <span class="zone right">{right}</span>
+  <span class="zone right">
+    {right}
+    <ThemeToggle />
+  </span>
 </footer>
 
 <style>
@@ -41,5 +46,15 @@ const { left = '', center = '', right = '' } = Astro.props
 
   .right {
     text-align: right;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  @media (max-width: 640px) {
+    .center {
+      display: none;
+    }
   }
 </style>

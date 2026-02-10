@@ -43,6 +43,7 @@ const links = [
     color: var(--muted);
     text-decoration: none;
     transition: color 0.2s ease;
+    padding: 0.5rem 0.25rem;
   }
 
   a:hover {
@@ -60,5 +61,11 @@ const links = [
     text-decoration: underline;
     text-underline-offset: 3px;
     text-decoration-color: var(--accent);
+  }
+
+  @media (max-width: 640px) {
+    nav {
+      margin-bottom: 1rem;
+    }
   }
 </style>

@@ -1,15 +1,20 @@
 ---
 import Base from '@layouts/Base.astro'
 import Nav from '@components/Nav.astro'
+import StatusBar from '@components/StatusBar.astro'
 ---
 
 <Base title="404 | Not Found">
   <Nav />
 
-  <section class="not-found">
-    <h1>404</h1>
-    <p class="muted">Page not found. Try one of the navigation links above.</p>
-  </section>
+  <div class="page-content">
+    <section class="not-found">
+      <h1>404</h1>
+      <p class="muted">Page not found. Try one of the navigation links above.</p>
+    </section>
+  </div>
+
+  <StatusBar center="←/→ nav · ? help" />
 </Base>
 
 <style>
