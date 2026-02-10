@@ -334,11 +334,12 @@ func (h *HomeSection) renderInfo(about content.About) string {
 			valueStyle.Render(about.Email),
 		))
 	}
-	if about.CLI != "" {
+	if siteURL := h.content.Meta.SiteURL; siteURL != "" {
+		display := strings.TrimPrefix(siteURL, "https://")
 		lines = append(lines, fmt.Sprintf(
 			"%s %s",
-			labelStyle.Render("CLI"),
-			valueStyle.Render(about.CLI),
+			labelStyle.Render("Web"),
+			valueStyle.Render(display),
 		))
 	}
 
