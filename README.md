@@ -15,7 +15,7 @@ terminal-portfolio/
 └── scripts/      Validation utilities
 ```
 
-The web version is a static Astro site. The terminal version is a Bubbletea TUI served over SSH with [Wish](https://github.com/charmbracelet/wish), made browser-accessible through [ttyd](https://github.com/nicm/ttyd) and a Cloudflare Tunnel.
+The web version is a static Astro site. The terminal version is a Bubbletea TUI served over SSH with [Wish](https://github.com/charmbracelet/wish), made browser-accessible through [ttyd](https://github.com/tsl0922/ttyd) and a Cloudflare Tunnel.
 
 ## Stack
 
