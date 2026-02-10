@@ -1,9 +1,9 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "About",
-  "description": "Biographical information, location, availability status, education, and interests.",
+  "description": "Biographical information, contact details, availability status, and education.",
   "type": "object",
-  "required": ["bio", "location", "status", "education", "interests"],
+  "required": ["bio", "email", "status"],
   "additionalProperties": false,
   "properties": {
     "bio": {
@@ -11,10 +11,14 @@
       "description": "Short biography paragraph.",
       "minLength": 1
     },
-    "location": {
+    "email": {
       "type": "string",
-      "description": "Geographic location or region.",
+      "description": "Contact email address.",
       "minLength": 1
+    },
+    "cli": {
+      "type": "string",
+      "description": "SSH address for the terminal portfolio."
     },
     "status": {
       "type": "string",
@@ -24,7 +28,6 @@
     "education": {
       "type": "array",
       "description": "List of educational credentials.",
-      "minItems": 1,
       "items": {
         "type": "object",
         "description": "A single education entry.",
@@ -52,7 +55,6 @@
     "interests": {
       "type": "array",
       "description": "List of professional or personal interests.",
-      "minItems": 1,
       "items": {
         "type": "string",
         "description": "A single interest.",

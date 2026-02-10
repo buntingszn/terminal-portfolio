@@ -102,7 +102,7 @@ func validateAbout(a *About) error {
 	if err := requireField("bio", a.Bio); err != nil {
 		return err
 	}
-	if err := requireField("location", a.Location); err != nil {
+	if err := requireField("email", a.Email); err != nil {
 		return err
 	}
 	return nil
