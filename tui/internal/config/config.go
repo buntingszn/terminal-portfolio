@@ -23,7 +23,7 @@ type Config struct {
 // with sensible defaults.
 func Load() (*Config, error) {
 	cfg := &Config{
-		SSHHost:     "0.0.0.0",
+		SSHHost:     "127.0.0.1",
 		SSHPort:     2222,
 		DataDir:     "../data",
 		MaxSessions: 100,
