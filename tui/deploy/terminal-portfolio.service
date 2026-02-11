@@ -132,8 +132,9 @@ ProtectControlGroups=yes
 # AF_INET and AF_INET6 for TCP/SSH, AF_UNIX for logging.
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
 
-# Allow SSH host key directory and analytics log to be writable.
-ReadWritePaths=/opt/terminal-portfolio/.ssh /opt/terminal-portfolio/analytics.jsonl
+# Allow SSH host key directory to be writable (for auto-generated keys)
+# and the working directory for the analytics JSONL log.
+ReadWritePaths=/opt/terminal-portfolio/.ssh /opt/terminal-portfolio
 
 # Log output goes to the journal (viewable with journalctl).
 StandardOutput=journal
