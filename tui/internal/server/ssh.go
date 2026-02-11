@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"strconv"
 	"sync/atomic"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/ssh"
@@ -13,6 +15,7 @@ import (
 	bm "github.com/charmbracelet/wish/bubbletea"
 	"github.com/muesli/termenv"
 
+	"github.com/buntingszn/terminal-portfolio/tui/internal/analytics"
 	"github.com/buntingszn/terminal-portfolio/tui/internal/app"
 	"github.com/buntingszn/terminal-portfolio/tui/internal/app/sections"
 	"github.com/buntingszn/terminal-portfolio/tui/internal/config"
@@ -25,21 +28,27 @@ type SSHServer struct {
 	logger      *slog.Logger
 	content     *content.Content
 	cfg         *config.Config
+	analytics   *analytics.Logger
 	maxSessions int64
 	active      atomic.Int64
 }
 
 // New creates a new SSH server configured with Wish and Bubble Tea middleware.
 func New(cfg *config.Config, c *content.Content) (*SSHServer, error) {
+	al, err := analytics.NewLogger(cfg.AnalyticsFile)
+	if err != nil {
+		return nil, fmt.Errorf("create analytics logger: %w", err)
+	}
+
 	s := &SSHServer{
 		logger:      slog.Default(),
 		content:     c,
 		cfg:         cfg,
+		analytics:   al,
 		maxSessions: int64(cfg.MaxSessions),
 	}
 
 	var srv *ssh.Server
-	var err error
 
 	addr := fmt.Sprintf("%s:%d", cfg.SSHHost, cfg.SSHPort)
 
@@ -87,6 +96,23 @@ func (s *SSHServer) teaHandler(sess ssh.Session) (tea.Model, []tea.ProgramOption
 	// Wire idle timeout warning into the Bubbletea model so users
 	// receive a 1-minute warning before the SSH idle disconnect.
 	m = m.SetIdleTimeout(s.cfg.IdleTimeout)
+
+	// Generate a short session ID and extract the visitor's IP for analytics.
+	sid := strconv.FormatInt(time.Now().UnixMilli(), 36)
+	remoteAddr := sess.RemoteAddr().String()
+	ip, _, err := net.SplitHostPort(remoteAddr)
+	if err != nil {
+		ip = remoteAddr
+	}
+
+	s.analytics.Log(analytics.Event{
+		Timestamp: time.Now(),
+		SessionID: sid,
+		Type:      analytics.EventSessionStart,
+		IP:        ip,
+	})
+	m = m.SetAnalytics(s.analytics, sid, ip)
+
 	opts := bm.MakeOptions(sess)
 	opts = append(opts, tea.WithAltScreen(), tea.WithMouseCellMotion())
 	return m, opts
@@ -166,7 +192,9 @@ func (s *SSHServer) Start() error {
 
 // Shutdown gracefully shuts down the SSH server.
 func (s *SSHServer) Shutdown(ctx context.Context) error {
-	return s.server.Shutdown(ctx)
+	err := s.server.Shutdown(ctx)
+	_ = s.analytics.Close()
+	return err
 }
 
 // ActiveSessions returns the number of currently active sessions.

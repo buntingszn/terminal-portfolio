@@ -48,6 +48,7 @@ func (m Model) handleIdleCheck() (Model, tea.Cmd) {
 
 	// Timeout expired: quit the session.
 	if elapsed >= m.idleTimeout {
+		m.logSessionEnd()
 		return m, tea.Quit
 	}
 

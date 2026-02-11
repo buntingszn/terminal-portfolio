@@ -16,19 +16,23 @@ type Config struct {
 	// IdleTimeout controls how long a session can remain idle before being
 	// disconnected. A value of 0 disables idle timeout entirely.
 	IdleTimeout time.Duration
-	Debug       bool
+	// AnalyticsFile is the path to the JSONL analytics log file.
+	// An empty string disables analytics logging.
+	AnalyticsFile string
+	Debug         bool
 }
 
 // Load reads configuration from TERMINAL_PORTFOLIO_ environment variables
 // with sensible defaults.
 func Load() (*Config, error) {
 	cfg := &Config{
-		SSHHost:     "127.0.0.1",
-		SSHPort:     2222,
-		DataDir:     "../data",
-		MaxSessions: 100,
-		IdleTimeout: 30 * time.Minute,
-		Debug:       false,
+		SSHHost:       "127.0.0.1",
+		SSHPort:       2222,
+		DataDir:       "../data",
+		MaxSessions:   100,
+		IdleTimeout:   30 * time.Minute,
+		AnalyticsFile: "analytics.jsonl",
+		Debug:         false,
 	}
 
 	if v := os.Getenv("TERMINAL_PORTFOLIO_SSH_HOST"); v != "" {
@@ -61,6 +65,10 @@ func Load() (*Config, error) {
 			return nil, fmt.Errorf("invalid idle timeout: %w", err)
 		}
 		cfg.IdleTimeout = d
+	}
+
+	if v, ok := os.LookupEnv("TERMINAL_PORTFOLIO_ANALYTICS_FILE"); ok {
+		cfg.AnalyticsFile = v
 	}
 
 	if v := os.Getenv("TERMINAL_PORTFOLIO_DEBUG"); v != "" {

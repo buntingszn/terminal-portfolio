@@ -7,6 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/buntingszn/terminal-portfolio/tui/internal/analytics"
 	"github.com/buntingszn/terminal-portfolio/tui/internal/content"
 )
 
@@ -56,6 +57,14 @@ type Model struct {
 	lastActivity    time.Time
 	showIdleWarning bool
 	idleRemaining   time.Duration
+
+	// Analytics fields. When analyticsLog is non-nil, the model emits
+	// session_start, section_view, and session_end events to the JSONL log.
+	analyticsLog  *analytics.Logger
+	sessionID     string
+	sessionIP     string
+	sessionStart  time.Time
+	sectionStart  time.Time
 }
 
 // New creates a new root Model with the given content data.
@@ -93,6 +102,48 @@ func (m Model) SetIdleTimeout(d time.Duration) Model {
 		m.lastActivity = time.Now()
 	}
 	return m
+}
+
+// SetAnalytics configures analytics logging for the model.
+// A nil logger disables analytics. This should be called before Init().
+func (m Model) SetAnalytics(l *analytics.Logger, sid, ip string) Model {
+	m.analyticsLog = l
+	m.sessionID = sid
+	m.sessionIP = ip
+	m.sessionStart = time.Now()
+	m.sectionStart = m.sessionStart
+	return m
+}
+
+// logSectionView emits a section_view event for the current section and
+// returns the current time for use as the next sectionStart.
+func (m *Model) logSectionView() time.Time {
+	now := time.Now()
+	if m.analyticsLog == nil {
+		return now
+	}
+	m.analyticsLog.Log(analytics.Event{
+		Timestamp:  now,
+		SessionID:  m.sessionID,
+		Type:       analytics.EventSectionView,
+		Section:    SectionName(m.activeSection),
+		DurationMs: now.Sub(m.sectionStart).Milliseconds(),
+	})
+	return now
+}
+
+// logSessionEnd emits the final section_view and session_end events.
+func (m *Model) logSessionEnd() {
+	if m.analyticsLog == nil {
+		return
+	}
+	m.logSectionView()
+	m.analyticsLog.Log(analytics.Event{
+		Timestamp:  time.Now(),
+		SessionID:  m.sessionID,
+		Type:       analytics.EventSessionEnd,
+		DurationMs: time.Since(m.sessionStart).Milliseconds(),
+	})
 }
 
 // Init implements tea.Model. It starts the intro boot sequence and, if
@@ -178,6 +229,7 @@ func (m Model) handleWindowSize(msg tea.WindowSizeMsg) (tea.Model, tea.Cmd) {
 // handleIntroDone transitions from the boot sequence to the active section.
 func (m Model) handleIntroDone() (tea.Model, tea.Cmd) {
 	m.showIntro = false
+	m.sectionStart = time.Now()
 	m.navBar.SetActive(m.activeSection)
 	initCmd := m.sections[m.activeSection].Init()
 	var focusCmd tea.Cmd
@@ -200,6 +252,7 @@ func (m Model) handlePaletteResult(msg PaletteResultMsg) (tea.Model, tea.Cmd) {
 	case PaletteNavigate:
 		return m.navigateTo(msg.Section)
 	case PaletteQuit:
+		m.logSessionEnd()
 		return m, tea.Quit
 	case PaletteHelp:
 		m.showHelp = true
@@ -244,6 +297,7 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 	switch msg.String() {
 	case "q", "ctrl+c":
+		m.logSessionEnd()
 		return m, tea.Quit
 	case "?":
 		m.showHelp = true
@@ -330,6 +384,9 @@ func (m Model) navigateTo(target Section) (tea.Model, tea.Cmd) {
 	if m.transition.Active() {
 		return m, nil
 	}
+
+	// Log the departing section view before switching.
+	m.sectionStart = m.logSectionView()
 
 	var cmds []tea.Cmd
 
