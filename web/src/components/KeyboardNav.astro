@@ -43,12 +43,13 @@
     const bg2 = clamp(g + shift)
     const bb = clamp(b + shift)
     const border = '#' + [br, bg2, bb].map((c) => c.toString(16).padStart(2, '0')).join('')
+    const muted = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.55)'
     return {
       '--bg': bgHex,
       '--fg': fg,
       '--accent': fg,
       '--accent-glow': fg,
-      '--muted': fg,
+      '--muted': muted,
       '--border': border,
     }
   }

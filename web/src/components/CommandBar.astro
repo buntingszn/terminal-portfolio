@@ -8,6 +8,7 @@
   class="command-bar hidden"
   role="dialog"
   aria-label="Command bar"
+  aria-modal="true"
 >
   <span class="prompt">:</span>
   <input
@@ -66,9 +67,11 @@
   const input = document.getElementById('command-input') as HTMLInputElement
   const errorEl = document.getElementById('command-error')
   let isOpen = false
+  let previousFocus: Element | null = null
 
   function openBar() {
     if (!bar || !input) return
+    previousFocus = document.activeElement
     isOpen = true
     bar.classList.remove('hidden')
     input.value = ''
@@ -81,6 +84,8 @@
     isOpen = false
     bar.classList.add('hidden')
     input.blur()
+    if (previousFocus instanceof HTMLElement) previousFocus.focus()
+    previousFocus = null
   }
 
   function executeCommand(cmd: string) {

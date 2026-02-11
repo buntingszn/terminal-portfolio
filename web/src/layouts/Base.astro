@@ -66,11 +66,13 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:site_name" content={meta.name} />
+    <meta property="og:image" content={`${meta.siteUrl}/og.png`} />
 
     <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={`${meta.siteUrl}/og.png`} />
 
     <title>{title}</title>
     <ClientRouter />
@@ -96,9 +98,10 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
           const shift = isDark ? 25 : -25
           const border = '#' + [clamp(rgb[0]+shift), clamp(rgb[1]+shift), clamp(rgb[2]+shift)]
             .map(function(c){ return c.toString(16).padStart(2,'0') }).join('')
+          const muted = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.55)'
           const tokens = {
             '--bg': bgHex, '--fg': fg, '--accent': fg,
-            '--accent-glow': fg, '--muted': fg, '--border': border
+            '--accent-glow': fg, '--muted': muted, '--border': border
           }
           const el = document.documentElement
           for (const k in tokens) el.style.setProperty(k, tokens[k])
@@ -153,6 +156,7 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
         document.addEventListener('astro:after-swap', function () {
           const main = document.getElementById('main-content')
           if (!main || pendingDir === 'none') return
+          if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { pendingDir = 'none'; return }
           const anim = pendingDir === 'forward' ? 'slide-in-from-right' : 'slide-in-from-left'
           main.style.animation = 'none'
           void main.offsetHeight // force reflow to restart animation
@@ -167,12 +171,16 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
     </script>
     <script is:inline>
       ;(function () {
+        const MAX_PARTICLES = 30
+        let activeParticles = 0
         const chars = '!@#$%^&*_+-=[]{}|;:<>?/~0123456789'
         let interval = null
         let mx = 0
         let my = 0
 
         function spawn() {
+          if (activeParticles >= MAX_PARTICLES) return
+          activeParticles++
           const p = document.createElement('span')
           p.className = 'mouse-particle'
           p.textContent = chars[Math.floor(Math.random() * chars.length)]
@@ -183,7 +191,7 @@ const canonicalUrl = new URL(Astro.url.pathname, meta.siteUrl).href
           p.style.setProperty('--dx', Math.cos(angle) * dist + 'px')
           p.style.setProperty('--dy', Math.sin(angle) * dist + 'px')
           document.body.appendChild(p)
-          p.addEventListener('animationend', function () { p.remove() })
+          p.addEventListener('animationend', function () { p.remove(); activeParticles-- })
         }
 
         document.addEventListener('mousemove', function (e) {

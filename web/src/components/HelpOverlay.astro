@@ -134,9 +134,11 @@
 <script>
   const overlay = document.getElementById('help-overlay')
   let isOpen = false
+  let previousFocus: Element | null = null
 
   function openHelp() {
     if (!overlay) return
+    previousFocus = document.activeElement
     isOpen = true
     overlay.classList.remove('hidden')
     overlay.focus()
@@ -146,6 +148,8 @@
     if (!overlay) return
     isOpen = false
     overlay.classList.add('hidden')
+    if (previousFocus instanceof HTMLElement) previousFocus.focus()
+    previousFocus = null
   }
 
   document.addEventListener('toggle-help', () => {
