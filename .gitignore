@@ -37,6 +37,9 @@ coverage/
 *.md
 !README.md
 
+# Internal scripts (deployment, local tooling)
+scripts/deploy-tui.sh
+
 # Misc
 *.log
 tmp/
